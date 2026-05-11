@@ -13,7 +13,7 @@ def start_nav():
     )
     bl.include(
         "dome2",
-        "control.launch.py"
+        "dome_control.launch.py"
     )
     bl.include(
         "dome2",
@@ -21,11 +21,11 @@ def start_nav():
     )
     bl.include(
         "dome2",
-        "oak_roboflow.launch.py"
+        "dome_vision.launch.py"
     )
     bl.include(
         "dome2",
-        "robot_voice.launch.py"
+        "dome_voice.launch.py"
     )
 
     

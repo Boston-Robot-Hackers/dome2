@@ -5,17 +5,16 @@ import os
 from better_launch import BetterLaunch, launch_this
 
 mode=os.environ.get("DOME_MODE", "robot")
+camera=os.environ.get("DOME_CAMERA", "oak")
+roboflow=os.environ.get("ROBOFLOW_API_KEY", None)
 
 @launch_this(ui=True)
 def start_nav():
     bl = BetterLaunch()
-    if mode == "remote":
-        launch_file = "remote.launch.py"
-    else:
-        launch_file = "robot.launch.py"
-    print(f"********** Launching control with mode {mode} and launch file {launch_file} ")
+    if not (mode == "robot" and camera == "oak"):
+        print("Oak camera and robot mode required. Exiting")
     bl.include(
-        "control",
-        launch_file,
-        )
-    
+        "dome_vision_ros",
+        "robot.launch.py",
+    )
+

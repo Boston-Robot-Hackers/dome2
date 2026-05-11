@@ -12,6 +12,6 @@ def start_nav():
     if not (mode == "robot"):
         print("Robot mode required because voice control is only onboard. Exiting")
     bl.include(
-        "robot_voice",
+        "dome_voice",
         "robot.launch.py",
     )

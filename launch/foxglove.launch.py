@@ -13,5 +13,5 @@ def start_nav():
     bl.include(
         "foxglove_bridge",
         "foxglove_bridge_launch.xml",
-        port="8080"
+        port="8765"
     )

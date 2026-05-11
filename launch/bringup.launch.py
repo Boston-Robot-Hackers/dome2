@@ -3,8 +3,6 @@
 
 import os
 from better_launch import BetterLaunch, launch_this
-mode=os.environ.get("DOME_MODE", "robot")
-
 
 @launch_this(ui=True)
 def start_nav():
@@ -12,11 +10,22 @@ def start_nav():
     bl.include(
         "dome2",
         "gendrv.launch.py",
-        port="8080",
-        mode=mode,
+    )
+    bl.include(
+        "dome2",
+        "control.launch.py"
     )
     bl.include(
         "dome2",
         "foxglove.launch.py"
     )
+    bl.include(
+        "dome2",
+        "oak_roboflow.launch.py"
+    )
+    bl.include(
+        "dome2",
+        "robot_voice.launch.py"
+    )
+
     

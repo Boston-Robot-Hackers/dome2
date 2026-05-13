@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
-# This is my version of launching the slam launch file from linorobot2
+# gendrv.launch.py — hardware driver bringup for dome2 robot
+# Author: Pito Salas and Claude Code
+# Open Source Under MIT license
 
+import logging
 import os
+
 from better_launch import BetterLaunch, launch_this
 
-mode=os.environ.get("DOME_MODE", "robot")
+mode = os.environ.get("DOME_MODE", "robot")
 
 
 @launch_this(ui=True)
 def start_nav():
-    bl = BetterLaunch()
     if mode != "robot":
-        print("Not in robot mode, skipping nav launch")
-    urdf_path = bl.find("dome", "dome3.urdf")
-    ekf_config_path = bl.find("dome", "ekf.yaml")
+        logging.warning("DOME_MODE != robot, skipping hardware driver bringup")
+        return
+    bl = BetterLaunch()
+    urdf_path = bl.find("dome2", "dome3.urdf")
+    ekf_config_path = bl.find("dome2", "ekf.yaml")
     bl.include(
         "linorobot2_bringup",
         "bringup.launch.py",

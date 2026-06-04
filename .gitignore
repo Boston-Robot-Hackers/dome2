@@ -29,3 +29,4 @@ htmlcov/
 ._*
 __MACOSX/
 Thumbs.db
+.claude/settings.local.json

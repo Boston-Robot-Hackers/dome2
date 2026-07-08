@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
-# This is my version of launching the slam launch file from linorobot2
+# dome_control.launch.py — control subsystem wrapper for dome2
+# Author: Pito Salas and Claude Code
+# Open Source Under MIT license
 
 import os
 from better_launch import BetterLaunch, launch_this
 
-mode=os.environ.get("DOME_MODE", "robot")
+MODE = os.environ.get("DOME_MODE", "robot")
+
 
 @launch_this(ui=True)
 def start_nav():
     bl = BetterLaunch()
-    if mode == "remote":
-        launch_file = "remote.launch.py"
-    else:
-        launch_file = "robot.launch.py"
-    print(f"********** Launching control with mode {mode} and launch file {launch_file} ")
-    bl.include(
-        "dome_control",
-        launch_file,
-        )
-    
+    launch_file = "remote.launch.py" if MODE == "remote" else "robot.launch.py"
+    bl.include("dome_control", launch_file)

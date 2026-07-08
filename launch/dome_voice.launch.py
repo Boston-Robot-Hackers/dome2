@@ -1,21 +1,12 @@
 #!/usr/bin/env python3
-# This is my version of launching the slam launch file from linorobot2
-
-import os
-import logging
+# dome_voice.launch.py — voice subsystem wrapper for dome2
+# Author: Pito Salas and Claude Code
+# Open Source Under MIT license
 
 from better_launch import BetterLaunch, launch_this
-
-mode = os.environ.get("DOME_MODE", "robot")
 
 
 @launch_this(ui=True)
 def start_nav():
     bl = BetterLaunch()
-    if mode != "robot":
-        logging.info("Skipping dome_voice launch: DOME_MODE=%s, robot mode is required", mode)
-        return
-    bl.include(
-        "dome_voice",
-        "robot.launch.py",
-    )
+    bl.include("dome_voice", "robot.launch.py")

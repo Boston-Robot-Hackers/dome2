@@ -1,78 +1,133 @@
 ---
-version: "1.0"
-generated: "2026-05-12"
+version: "1.1"
+generated: "2026-07-08"
 ---
 
 # The Top-Level Orchestrator: robot.launch.py
 
 ## What This File Does
 
-`robot.launch.py` is the single entry point for launching the complete robot. It includes every other `dome2` launch file in sequence, bringing up all subsystems together.
+`robot.launch.py` is the single entry point for launching dome2. It decides *which*
+subsystems to bring up based on a profile (an environment variable that names a token
+string), a direct `--options` override, or interactive prompting. The subsystem launch
+files it delegates to are intentionally thin; all selection policy lives here.
+
+## Subsystem Registry
+
+Two module-level structures define the available subsystems:
 
 ```python
-@launch_this(ui=True)
-def start_nav():
-    bl = BetterLaunch()
-    bl.include("dome2", "gendrv.launch.py")
-    bl.include("dome2", "dome_control.launch.py")
-    bl.include("dome2", "foxglove.launch.py")
-    bl.include("dome2", "dome_vision.launch.py")
-    bl.include("dome2", "dome_voice.launch.py")
+SUBSYSTEMS = ["drivers", "control", "vision", "voice", "foxglove", "nav"]
+
+LAUNCH_FILES = {
+    "drivers":  ("dome2", "gendrv.launch.py"),
+    "control":  ("dome2", "dome_control.launch.py"),
+    "vision":   ("dome2", "dome_vision.launch.py"),
+    "voice":    ("dome2", "dome_voice.launch.py"),
+    "foxglove": ("dome2", "foxglove.launch.py"),
+    "nav":      ("dome2", "dome_nav.launch.py"),
+}
 ```
 
-Five lines, five subsystems. No logic, no conditions — just composition.
+`SUBSYSTEMS` is an ordered list (display and prompt order). `LAUNCH_FILES` maps each
+name to its `(package, launch_file)` tuple. Adding a new subsystem means one entry in
+each structure.
 
-## Startup Order
+## Token Resolution
 
-The includes appear in a deliberate sequence:
+Users specify subsystems by prefix rather than full name, so `"d c vi"` expands to
+`["drivers", "control", "vision"]`. The resolver enforces that each token is
+unambiguous:
+
+```python
+def resolve_tokens(options_str: str) -> list[str]:
+    resolved = []
+    for token in options_str.split():
+        matches = [s for s in SUBSYSTEMS if s.startswith(token.lower())]
+        if len(matches) == 1:
+            resolved.append(matches[0])
+        elif not matches:
+            logging.warning(f"Launch option '{token}' matches no subsystem, skipping")
+        else:
+            logging.warning(f"Launch option '{token}' is ambiguous: matches {matches}, skipping")
+    return resolved
+```
+
+Ambiguous and unknown tokens are skipped with a warning rather than raising. The rationale:
+a typo in a token string should not prevent the rest of the robot from starting.
 
 ```mermaid
-graph LR
-    gendrv["1. gendrv<br/>Hardware drivers<br/>ESP32, micro-ROS, EKF"]
-    ctrl["2. dome_control<br/>Control stack<br/>Nav, planning"]
-    fox["3. foxglove<br/>Monitoring bridge<br/>WebSocket UI"]
-    vision["4. dome_vision<br/>OAK-D camera<br/>Perception"]
-    voice["5. dome_voice<br/>Microphone + speaker<br/>Voice commands"]
-    
-    gendrv --> ctrl --> fox --> vision --> voice
+flowchart TD
+    A[token string] --> B[split on whitespace]
+    B --> C{prefix match count}
+    C -->|1| D[append to resolved]
+    C -->|0| E[warn: unknown, skip]
+    C -->|>1| F[warn: ambiguous, skip]
+    D --> G[return resolved list]
+    E --> G
+    F --> G
 ```
 
-Hardware drivers first — the control stack needs odometry and IMU data from the ESP32 before it can do anything useful. Foxglove comes early so the monitoring UI is available as subsequent subsystems start, making it easier to observe their initialization. Vision and voice come last as they are the highest-level, most optional subsystems.
+## Profile System
 
-However, ROS2 launch does not guarantee sequential startup in the sense of "wait for subsystem A to be fully ready before starting subsystem B." All included launch files are composed into a single `LaunchDescription` and executed by the ROS2 launch framework. The ordering here controls the order in which processes are *spawned*, not the order in which they reach operational readiness. Nodes that need other nodes must handle startup races themselves (typically through ROS2's lifecycle nodes or retry logic).
+A *profile* is an environment variable whose value is a token string. The default
+profile is `$DOME_PROFILE`; if unset, it falls back to `"robot"`, meaning it reads
+`$robot`.
 
-## What's Not In This File
-
-`robot.launch.py` contains no environment variable reads. It defers all mode logic to the individual subsystem launch files. This is the correct separation: the orchestrator's job is composition, not policy.
-
-There is no error handling if a subsystem fails to launch. A single `bl.include()` failure will propagate up and abort the remaining includes — this is the expected ROS2 launch behavior. The `ui=True` flag on `@launch_this` makes it easier to spot which process failed.
-
-## How to Use
-
-Full robot bringup on the robot hardware:
-
-```bash
-DOME_MODE=robot ros2 launch dome2 robot.launch.py
+```python
+DEFAULT_PROFILE = os.environ.get("DOME_PROFILE", "robot")
 ```
 
-Remote machine (no hardware, no voice, degraded control):
+In `start_nav`:
 
-```bash
-DOME_MODE=remote ros2 launch dome2 robot.launch.py
+```python
+if options is not None:
+    token_str = options
+else:
+    token_str = os.environ.get(profile)
+    if token_str is None:
+        raise ValueError(f"Profile '{profile}': no env var '{profile}' found")
 ```
 
-Or launch individual subsystems for development:
+`--options` overrides the profile entirely. If neither is available, the function raises
+rather than silently launching nothing.
 
-```bash
-# Only hardware + control (no vision/voice)
-DOME_MODE=robot ros2 launch dome2 gendrv.launch.py &
-DOME_MODE=robot ros2 launch dome2 dome_control.launch.py
+## Interactive Mode
+
+When `--is_interactive` is set, each subsystem is confirmed individually via `click`:
+
+```python
+if is_interactive:
+    logging.info(f"Profile '{profile}' — confirm each subsystem:")
+    for name in SUBSYSTEMS:
+        cfg[name] = click.confirm(f"  Launch {name}?", default=cfg[name])
 ```
 
-## Improvement Opportunities
+The profile or `--options` still runs first to set the defaults; interactive mode lets
+the user adjust from that starting point rather than starting from all-off.
 
-**No health checks between subsystems.** The orchestrator could benefit from `ReadinessGate`-style conditions (available in newer ROS2 versions) that delay starting a subsystem until its dependencies advertise readiness on specific topics.
+## Launch Loop
 
-**Unconditional includes.** If you want to bring up the robot without voice (e.g., for a silent demo environment), you must edit this file. A more flexible design would accept launch arguments (`with_voice:=false`) that gate individual `bl.include()` calls.
+```python
+bl = BetterLaunch()
+for name, enabled in cfg.items():
+    if enabled:
+        pkg, launch_file = LAUNCH_FILES[name]
+        bl.include(pkg, launch_file)
+```
 
-**No restart policy.** If the vision node crashes, it stays down. ROS2 launch supports `respawn=True` on node actions; a production orchestrator might want this for critical subsystems like control.
+`cfg` is a `{subsystem: bool}` dict. Iterating it in insertion order (Python 3.7+)
+means subsystems launch in the order defined in `SUBSYSTEMS`.
+
+## Design Observations
+
+- **Profile indirection adds one level of naming.** `$DOME_PROFILE=robot` means "read
+  `$robot`", not "use the string `robot`". This is non-obvious; the examples in the file
+  header are the primary documentation.
+- **`options: str = None` should be `str | None`.** Minor style inconsistency with the
+  project's type annotation convention.
+- **No deduplication in token resolution.** Passing `"d drivers"` would launch drivers
+  twice. This is unlikely in practice but worth noting.
+- **`click` dependency for interactive mode.** If `click` is not installed, interactive
+  mode crashes at runtime rather than at import time. Consider a lazy import or a
+  runtime check with a clear error.

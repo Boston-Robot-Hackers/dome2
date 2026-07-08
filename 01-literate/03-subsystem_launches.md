@@ -1,106 +1,100 @@
 ---
-version: "1.0"
-generated: "2026-05-12"
+version: "1.1"
+generated: "2026-07-08"
 ---
 
-# Subsystem Launch Files: Control, Voice, and Vision
+# Subsystem Launch Files: Control, Vision, Voice, and Drivers
 
-The three subsystem launch files — `dome_control.launch.py`, `dome_voice.launch.py`, and `dome_vision.launch.py` — share a structure: read environment, validate preconditions, delegate to the subsystem package. Each enforces different constraints based on what the subsystem requires.
+The subsystem launch files in dome2 — `dome_control.launch.py`, `dome_vision.launch.py`,
+`dome_voice.launch.py`, and `gendrv.launch.py` — are intentionally thin wrappers.
+Their job is to delegate to the owning subsystem package; policy about *when* to launch
+a subsystem lives in the top-level orchestrator (`robot.launch.py`), not here.
 
-## dome_control: Mode-Aware Control
+This separation keeps each file trivially auditable and makes the intent of the
+`robot.launch.py` profile system legible without hunting through conditionals scattered
+across multiple files.
+
+## dome_control: Mode-Aware Control Delegation
+
+Control is the one subsystem that has a meaningful mode distinction: the robot can run
+locally (`robot.launch.py`) or remotely (`remote.launch.py`). That choice is expressed
+once, at module level, via `DOME_MODE`.
 
 ```python
-mode = os.environ.get("DOME_MODE", "robot")
+MODE = os.environ.get("DOME_MODE", "robot")
 
 @launch_this(ui=True)
 def start_nav():
     bl = BetterLaunch()
-    if mode == "remote":
-        launch_file = "remote.launch.py"
-    else:
-        launch_file = "robot.launch.py"
-    print(f"********** Launching control with mode {mode} and launch file {launch_file} ")
+    launch_file = "remote.launch.py" if MODE == "remote" else "robot.launch.py"
     bl.include("dome_control", launch_file)
 ```
 
-Control is the only subsystem that supports both `robot` and `remote` modes. This reflects a real architectural split: when running on the robot, the control stack runs locally and communicates directly with hardware. When running on a remote machine, a different launch file (`remote.launch.py`) starts a subset of nodes — likely those that generate commands and display state, without the low-level hardware interface.
+The ternary replaces the old `if/else` block. Because `MODE` is read once at import time
+(a module-level constant), there is no risk of the environment changing between the check
+and the `bl.include` call.
 
-The explicit print statement (`**********`) is a runtime diagnostic — easy to spot in log output when debugging launch sequences. It signals which branch was taken.
+## dome_vision and dome_voice: Unconditional Wrappers
 
-Notice the branching logic: `remote` triggers the remote file, *anything else* (including `robot`) triggers `robot.launch.py`. This means an unknown `DOME_MODE` value silently falls through to robot mode. Whether this is intentional or a latent bug depends on whether new modes are anticipated.
-
-## dome_voice: Robot-Only Constraint
+Vision and voice previously included mode guards (`DOME_MODE`, `DOME_CAMERA`). Those
+guards were removed because the top-level orchestrator now decides whether to include
+a subsystem at all. A wrapper that does nothing but `bl.include(…)` is still useful: it
+gives the subsystem a stable ROS2 entry point that the orchestrator can reference by name.
 
 ```python
-mode = os.environ.get("DOME_MODE", "robot")
-
+# dome_vision.launch.py
 @launch_this(ui=True)
 def start_nav():
     bl = BetterLaunch()
-    if not (mode == "robot"):
-        print("Robot mode required because voice control is only onboard. Exiting")
-    bl.include("dome_voice", "robot.launch.py")
-```
-
-Voice is hardware-bound: the microphone and speaker are physical devices on the robot, not accessible remotely. The mode check enforces this constraint — but notice that after the print, `bl.include()` is called unconditionally. In non-robot mode, this will attempt to launch and likely fail when the audio devices are not found.
-
-This is a soft guard, not a hard one. The print serves as a warning for the developer launching manually; the actual failure mode depends on what `dome_voice`'s launch file does when audio hardware is missing.
-
-## dome_vision: Multi-Condition Guard
-
-```python
-mode = os.environ.get("DOME_MODE", "robot")
-camera = os.environ.get("DOME_CAMERA", "oak")
-roboflow = os.environ.get("ROBOFLOW_API_KEY", None)
-
-@launch_this(ui=True)
-def start_nav():
-    bl = BetterLaunch()
-    if not (mode == "robot" and camera == "oak"):
-        print("Oak camera and robot mode required. Exiting")
     bl.include("dome_vision_ros", "robot.launch.py")
 ```
 
-Vision introduces two additional environment variables:
-
-| Variable | Default | Meaning |
-|----------|---------|---------|
-| `DOME_CAMERA` | `oak` | Camera hardware type; only `oak` (OAK-D) is supported |
-| `ROBOFLOW_API_KEY` | `None` | API key for Roboflow model inference; read but not passed to the launch |
-
-The `ROBOFLOW_API_KEY` is read at the module level but never used in the launch logic. It's likely consumed by the vision nodes themselves via the environment — they read it directly rather than receiving it as a launch argument. This is a common pattern for API keys: passing secrets through launch argument chains creates logs; environment variables stay out of logs.
-
-The guard condition requires both `robot` mode AND `oak` camera. An `oak` camera connected to a remote machine doesn't satisfy the constraint — vision processing must happen on the robot where the USB camera is physically attached.
-
-Like voice, the guard is soft: `bl.include()` runs unconditionally after the check.
-
-## Constraint Summary
-
-```mermaid
-graph TD
-    subgraph "dome_control"
-        C1{DOME_MODE?}
-        C1 -->|remote| C2[remote.launch.py]
-        C1 -->|robot / other| C3[robot.launch.py]
-    end
-
-    subgraph "dome_voice"
-        V1{DOME_MODE == robot?}
-        V1 -->|no| V2[warn + attempt launch]
-        V1 -->|yes| V3[robot.launch.py]
-    end
-
-    subgraph "dome_vision"
-        VZ1{DOME_MODE == robot<br/>AND DOME_CAMERA == oak?}
-        VZ1 -->|no| VZ2[warn + attempt launch]
-        VZ1 -->|yes| VZ3[robot.launch.py]
-    end
+```python
+# dome_voice.launch.py
+@launch_this(ui=True)
+def start_nav():
+    bl = BetterLaunch()
+    bl.include("dome_voice", "robot.launch.py")
 ```
+
+## gendrv: Hardware Driver Bringup
+
+`gendrv.launch.py` brings up the physical robot: URDF, EKF config, serial port to the
+ESP32 microcontroller, and the linorobot2 bringup stack.
+
+```python
+@launch_this(ui=True)
+def start_nav():
+    bl = BetterLaunch()
+    urdf_path = bl.find("dome2", "dome3.urdf")
+    ekf_config_path = bl.find("dome2", "ekf.yaml")
+    bl.include(
+        "linorobot2_bringup",
+        "bringup.launch.py",
+        rviz=False,
+        sim=False,
+        base_serial_port="/dev/esp32",
+        micro_ros_baudrate="921600",
+        madgwick="false",
+        orientation_stddev="0.01",
+        joy="false",
+        urdf=urdf_path,
+        ekf_config_path=ekf_config_path,
+    )
+```
+
+The explicit keyword arguments serve as documentation of the non-default choices: no
+RViz, no simulation, no joystick, no Madgwick filter. These are robot-specific policy
+decisions that should be visible at a glance.
 
 ## Design Observations
 
-**Guards are advisory, not enforced.** All three subsystems print warnings but proceed to `bl.include()` regardless. A stricter design would `return` or `raise` after a failed check. The current pattern relies on the downstream launch failing visibly — which may be acceptable in practice but makes the intent ambiguous.
-
-**Mode inference, not configuration.** Each launch file independently reads `DOME_MODE`. There is no central configuration object passed between launch files. This is consistent with ROS2's process model (each launch file is an independent Python module), but it means adding a new mode requires touching every subsystem file.
-
-**Package naming inconsistency.** Control delegates to `dome_control`, voice to `dome_voice`, but vision delegates to `dome_vision_ros` — not `dome_vision`. The `_ros` suffix suggests the vision package has a naming convention that differs from the others, possibly because the original `dome_vision` name was taken or there is a non-ROS component with that name.
+- **Mode gating moved up.** The old pattern of each wrapper checking `DOME_MODE` before
+  deciding to do anything created duplicated conditional logic and made the overall
+  launch profile impossible to reason about in one place. Moving selection to
+  `robot.launch.py` is cleaner.
+- **`gendrv` is the one file with real config.** If hardware params change (port, baud
+  rate, URDF path), this is the only file that needs updating.
+- **`start_nav` naming is inherited.** All four files use `start_nav` as the function
+  name even though most don't navigate. This is a `better_launch` convention; changing
+  it would break the launcher decorator.

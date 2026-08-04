@@ -2,26 +2,43 @@
 
 ## Last session
 
-Date: 2026-07-08
+Date: 2026-08-04
 
-Checkpoint: all 13 tests pass. Literate docs regenerated for subsystem launches and
-robot orchestrator (both were stale after mode-gating removal). No open features or tasks.
+Session on the Pi to plan a step-by-step bring-up/smoke test of the full
+robot stack (drivers → control → dome_nav SLAM/Nav2/explorer →
+dome_mission's `mission_node`). Drafted F02 + TF02 but deliberately did not
+start implementation — see Blocked below. Robot is being rebooted at end of
+session.
 
 ## In progress
 
-Nothing in progress.
+Nothing in progress. F02 (see Next up) is drafted and accepted but not
+started.
 
 ## Blocked / needs decision
 
-Nothing blocked.
+**F02 is parked pending `dome_control`'s F19.** Investigating the smoke
+test surfaced that `dome_control`'s `behavior_manager` and `dome_mission`'s
+`mission_node` both subscribe to `/intent` with no coordination (dead
+`intent.explore` CLI command, and `stop` doesn't cancel an active
+`dome_mission` goal). Running F02's stage 2 (control) next to stage 4
+(mission) would smoke-test through an unresolved integration gap, so
+`dome_control`'s F19 (`03-features/notdone/F19-dome-mission-intent-
+integration.md` in that package) needs to land first.
 
 ## Next up
 
-Define first feature. Candidate from onboarding doc: implement `count_objects`
-(service in semantic_map_node → PerceptionBehavior → announcement → voice phrase).
+1. Land `dome_control`'s F19 (dome_mission `/intent` integration) —
+   tracked in that package, not here.
+2. Resume F02 (`03-features/notdone/F02-full-stack-smoke-test.md`) — T01
+   (stage spec) and T02 (health-check logic) are pure and could start
+   independently of F19 if useful; T03/T04 (actual orchestration through
+   the control + mission stages) should wait for F19.
 
 ## Recent completions
 
+- 2026-08-04: Drafted F02/TF02 — full-stack smoke test (4 stages: drivers,
+  control, nav, mission), not started.
 - 2026-07-08: Checkpoint — tests pass, literate docs updated, stale mode-gate docs removed
 - Bootstrap scaffold created (LICENSE, spec.md, current.md, notes.md, process folders)
 - Prior session: skip gated subsystem launches cleanly

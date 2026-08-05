@@ -1,6 +1,6 @@
 ---
-version: "1.1"
-generated: "2026-07-08"
+version: "1.2"
+generated: "2026-08-05"
 ---
 
 # The Top-Level Orchestrator: robot.launch.py
@@ -17,17 +17,21 @@ files it delegates to are intentionally thin; all selection policy lives here.
 Two module-level structures define the available subsystems:
 
 ```python
-SUBSYSTEMS = ["drivers", "control", "vision", "voice", "foxglove", "nav"]
+SUBSYSTEMS = ["drivers", "control", "vision", "voice", "foxglove"]
 
 LAUNCH_FILES = {
-    "drivers":  ("dome2", "gendrv.launch.py"),
-    "control":  ("dome2", "dome_control.launch.py"),
-    "vision":   ("dome2", "dome_vision.launch.py"),
-    "voice":    ("dome2", "dome_voice.launch.py"),
+    "drivers": ("dome2", "gendrv.launch.py"),
+    "control": ("dome2", "dome_control.launch.py"),
+    "vision": ("dome2", "dome_vision.launch.py"),
+    "voice": ("dome2", "dome_voice.launch.py"),
     "foxglove": ("dome2", "foxglove.launch.py"),
-    "nav":      ("dome2", "dome_nav.launch.py"),
 }
 ```
+
+Nav/SLAM used to be a subsystem here but is now launched separately, per mode,
+from the `dome_nav` package (`robot_map.launch.py`, `robot_nav.launch.py`,
+`robot_explore.launch.py`) — it doesn't fit the always-on-or-off model this
+resolver applies to the other subsystems.
 
 `SUBSYSTEMS` is an ordered list (display and prompt order). `LAUNCH_FILES` maps each
 name to its `(package, launch_file)` tuple. Adding a new subsystem means one entry in
@@ -49,7 +53,9 @@ def resolve_tokens(options_str: str) -> list[str]:
         elif not matches:
             logging.warning(f"Launch option '{token}' matches no subsystem, skipping")
         else:
-            logging.warning(f"Launch option '{token}' is ambiguous: matches {matches}, skipping")
+            logging.warning(
+                f"Launch option '{token}' is ambiguous: matches {matches}, skipping"
+            )
     return resolved
 ```
 
@@ -124,8 +130,6 @@ means subsystems launch in the order defined in `SUBSYSTEMS`.
 - **Profile indirection adds one level of naming.** `$DOME_PROFILE=robot` means "read
   `$robot`", not "use the string `robot`". This is non-obvious; the examples in the file
   header are the primary documentation.
-- **`options: str = None` should be `str | None`.** Minor style inconsistency with the
-  project's type annotation convention.
 - **No deduplication in token resolution.** Passing `"d drivers"` would launch drivers
   twice. This is unlikely in practice but worth noting.
 - **`click` dependency for interactive mode.** If `click` is not installed, interactive

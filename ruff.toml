@@ -1,0 +1,6 @@
+[lint]
+# LOG015: warns on logging.warning()/info() calls against the root logger,
+# suggesting a named logger instead. Skipped here — pytest's caplog fixture
+# in this environment doesn't reliably capture records from named loggers,
+# only the root logger, so switching breaks log-assertion tests.
+ignore = ["LOG015"]

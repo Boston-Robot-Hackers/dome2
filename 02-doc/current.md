@@ -2,13 +2,22 @@
 
 ## Last session
 
-Date: 2026-08-04
+Date: 2026-08-05
 
-Session on the Pi to plan a step-by-step bring-up/smoke test of the full
-robot stack (drivers → control → dome_nav SLAM/Nav2/explorer →
-dome_mission's `mission_node`). Drafted F02 + TF02 but deliberately did not
-start implementation — see Blocked below. Robot is being rebooted at end of
-session.
+Checkpoint session: reworked `.claude/` process docs (removed
+`codereview.md` and `how_to_be.md`, updated `bootstrap.md`, `literate.md`,
+`process.md`, `settings.json`, `CLAUDE.md`). Along the way found and fixed
+a regression from the earlier nav-subsystem removal (93f2c97) — two tests
+in `test/test_launch_profiles.py` still asserted on a `"nav"` token that
+no longer resolves. Also cleared pre-existing `ruff check`/`ruff format`
+debt in the Python source (`launch/`, `test/`, `setup.py`): missing exec
+bits, import ordering, implicit-`Optional`, a self-calling lambda. Added
+`ruff.toml` to ignore `LOG015` — the fix (module-level `logging.getLogger`
+instead of the root logger) breaks `caplog`-based log assertions in this
+environment, so it's a deliberate exception, not unnoticed debt. Also
+updated `.claude/commands/checkpoint.md` to require asking the user before
+applying any ruff fix, and to state whether it aligns with
+`.claude/style_guide.md`.
 
 ## In progress
 
@@ -37,9 +46,10 @@ integration.md` in that package) needs to land first.
 
 ## Recent completions
 
+- 2026-08-05: Checkpoint — `.claude/` process rework, fixed nav-removal
+  test regression, cleared ruff debt in Python source, `ruff.toml` added
+  to record the one deliberate LOG015 exception.
 - 2026-08-04: Drafted F02/TF02 — full-stack smoke test (4 stages: drivers,
   control, nav, mission), not started.
-- 2026-07-08: Checkpoint — tests pass, literate docs updated, stale mode-gate docs removed
-- Bootstrap scaffold created (LICENSE, spec.md, current.md, notes.md, process folders)
-- Prior session: skip gated subsystem launches cleanly
-- Prior session: codereview v3.1, /start command, CLAUDE.md, how_to_be wired
+
+Older entries archived in `02-doc/history.md`.

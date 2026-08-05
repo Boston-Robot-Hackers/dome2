@@ -23,10 +23,10 @@ from better_launch import BetterLaunch, launch_this
 SUBSYSTEMS = ["drivers", "control", "vision", "voice", "foxglove"]
 
 LAUNCH_FILES = {
-    "drivers":  ("dome2", "gendrv.launch.py"),
-    "control":  ("dome2", "dome_control.launch.py"),
-    "vision":   ("dome2", "dome_vision.launch.py"),
-    "voice":    ("dome2", "dome_voice.launch.py"),
+    "drivers": ("dome2", "gendrv.launch.py"),
+    "control": ("dome2", "dome_control.launch.py"),
+    "vision": ("dome2", "dome_vision.launch.py"),
+    "voice": ("dome2", "dome_voice.launch.py"),
     "foxglove": ("dome2", "foxglove.launch.py"),
 }
 
@@ -42,14 +42,16 @@ def resolve_tokens(options_str: str) -> list[str]:
         elif not matches:
             logging.warning(f"Launch option '{token}' matches no subsystem, skipping")
         else:
-            logging.warning(f"Launch option '{token}' is ambiguous: matches {matches}, skipping")
+            logging.warning(
+                f"Launch option '{token}' is ambiguous: matches {matches}, skipping"
+            )
     return resolved
 
 
 @launch_this(ui=True)
 def start_nav(
     profile: str = DEFAULT_PROFILE,
-    options: str = None,
+    options: str | None = None,
     is_interactive: bool = False,
 ):
     """Launch dome2 subsystems by profile, token string, or interactively.

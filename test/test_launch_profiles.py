@@ -8,11 +8,11 @@ import logging
 import os
 import sys
 
-import pytest
-
 # Load resolve_tokens and constants directly from the launch file without
 # executing the @launch_this decorated function (which requires a ROS runtime).
 import types
+
+import pytest
 
 launch_path = os.path.join(os.path.dirname(__file__), "..", "launch", "robot.launch.py")
 launch_spec = importlib.util.spec_from_file_location("robot_launch", launch_path)
@@ -21,7 +21,17 @@ launch_mod = importlib.util.module_from_spec(launch_spec)
 # Stub out better_launch so the module loads without ROS
 bl_stub = types.ModuleType("better_launch")
 bl_stub.BetterLaunch = object
-bl_stub.launch_this = lambda *a, **kw: (lambda f: f) if not a else (lambda f: f)(a[0])
+
+
+def identity_decorator(func):
+    return func
+
+
+def launch_this_stub(*decorator_args, **decorator_kwargs):
+    return decorator_args[0] if decorator_args else identity_decorator
+
+
+bl_stub.launch_this = launch_this_stub
 sys.modules.setdefault("better_launch", bl_stub)
 sys.modules.setdefault("click", pytest.importorskip("click"))
 
@@ -39,7 +49,6 @@ class TestResolveTokens:
         assert resolve_tokens("d") == ["drivers"]
         assert resolve_tokens("c") == ["control"]
         assert resolve_tokens("f") == ["foxglove"]
-        assert resolve_tokens("n") == ["nav"]
 
     def test_disambiguating_prefix(self):
         assert resolve_tokens("vi") == ["vision"]
@@ -94,6 +103,6 @@ class TestProfiles:
         assert os.environ.get("no-such-profile") is None
 
     def test_robot_nav_env_var(self, monkeypatch):
-        monkeypatch.setenv("robot-nav", "d c vi vo f n")
+        monkeypatch.setenv("robot-nav", "d c vi vo f")
         active = set(resolve_tokens(os.environ["robot-nav"]))
-        assert "nav" in active
+        assert active == {"drivers", "control", "vision", "voice", "foxglove"}

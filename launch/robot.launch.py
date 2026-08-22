@@ -51,7 +51,7 @@ def resolve_tokens(options_str: str) -> list[str]:
 @launch_this(ui=True)
 def start_nav(
     profile: str = DEFAULT_PROFILE,
-    options: str | None = None,
+    options: str = "",
     is_interactive: bool = False,
 ):
     """Launch dome2 subsystems by profile, token string, or interactively.
@@ -68,7 +68,7 @@ def start_nav(
     is_interactive : bool
         Prompt yes/no for each subsystem before launching.
     """
-    if options is not None:
+    if options:
         token_str = options
     else:
         token_str = os.environ.get(profile)

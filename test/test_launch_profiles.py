@@ -4,6 +4,7 @@
 # Open Source Under MIT license
 
 import importlib.util
+import inspect
 import logging
 import os
 import sys
@@ -106,3 +107,16 @@ class TestProfiles:
         monkeypatch.setenv("robot-nav", "d c vi vo f")
         active = set(resolve_tokens(os.environ["robot-nav"]))
         assert active == {"drivers", "control", "vision", "voice", "foxglove"}
+
+
+class TestStartNavSignature:
+    def test_param_annotations_are_plain_types(self):
+        # better_launch passes each parameter's annotation straight to
+        # click.Option(type=...), which cannot build an option from a
+        # union (e.g. `str | None`) — regression check for that crash.
+        start_nav = launch_mod.start_nav
+        for param in inspect.signature(start_nav).parameters.values():
+            assert isinstance(param.annotation, type), (
+                f"{param.name} annotation {param.annotation!r} is not a plain "
+                "type; better_launch's click bridge can't consume a union"
+            )

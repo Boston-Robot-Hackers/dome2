@@ -50,6 +50,8 @@ class TestResolveTokens:
         assert resolve_tokens("d") == ["drivers"]
         assert resolve_tokens("c") == ["control"]
         assert resolve_tokens("f") == ["foxglove"]
+        assert resolve_tokens("b") == ["battery"]
+        assert resolve_tokens("y") == ["yellow"]
 
     def test_disambiguating_prefix(self):
         assert resolve_tokens("vi") == ["vision"]

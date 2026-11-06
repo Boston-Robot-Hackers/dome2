@@ -7,6 +7,7 @@
 #   bl dome2 robot.launch.py                              # use $DOME_PROFILE env var
 #   bl dome2 robot.launch.py --profile dev                # use $dev env var
 #   bl dome2 robot.launch.py --options "d c vi"           # drivers + control + vision
+#   bl dome2 robot.launch.py --options "d b y"            # drivers + battery + yellow pad
 #   bl dome2 robot.launch.py --is_interactive             # confirm each subsystem
 #
 # Nav/SLAM is launched separately per mode from the dome_nav package:
@@ -20,7 +21,7 @@ import os
 import click
 from better_launch import BetterLaunch, launch_this
 
-SUBSYSTEMS = ["drivers", "control", "vision", "voice", "foxglove"]
+SUBSYSTEMS = ["drivers", "control", "vision", "voice", "foxglove", "battery", "yellow"]
 
 LAUNCH_FILES = {
     "drivers": ("dome2", "gendrv.launch.py"),
@@ -28,6 +29,8 @@ LAUNCH_FILES = {
     "vision": ("dome2", "dome_vision.launch.py"),
     "voice": ("dome2", "dome_voice.launch.py"),
     "foxglove": ("dome2", "foxglove.launch.py"),
+    "battery": ("dome_telemetry", "robot.launch.py"),
+    "yellow": ("yellow_pad", "yellow_pad.launch.py"),
 }
 
 DEFAULT_PROFILE = os.environ.get("DOME_PROFILE", "robot")
@@ -56,7 +59,8 @@ def start_nav(
 ):
     """Launch dome2 subsystems by profile, token string, or interactively.
 
-    Subsystems (use any unambiguous prefix): drivers, control, vision, voice, foxglove.
+    Subsystems (use any unambiguous prefix): drivers, control, vision, voice, foxglove,
+    battery (battery telemetry), yellow (Yellow Pad joystick teleop).
     Example: "d c vi" = drivers + control + vision.
 
     Parameters

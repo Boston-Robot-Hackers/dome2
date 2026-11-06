@@ -1,6 +1,6 @@
 ---
-version: "1.2"
-generated: "2026-08-05"
+version: "1.3"
+generated: "2026-11-05"
 ---
 
 # The Top-Level Orchestrator: robot.launch.py
@@ -17,7 +17,7 @@ files it delegates to are intentionally thin; all selection policy lives here.
 Two module-level structures define the available subsystems:
 
 ```python
-SUBSYSTEMS = ["drivers", "control", "vision", "voice", "foxglove"]
+SUBSYSTEMS = ["drivers", "control", "vision", "voice", "foxglove", "battery", "yellow"]
 
 LAUNCH_FILES = {
     "drivers": ("dome2", "gendrv.launch.py"),
@@ -25,8 +25,23 @@ LAUNCH_FILES = {
     "vision": ("dome2", "dome_vision.launch.py"),
     "voice": ("dome2", "dome_voice.launch.py"),
     "foxglove": ("dome2", "foxglove.launch.py"),
+    "battery": ("dome_telemetry", "robot.launch.py"),
+    "yellow": ("yellow_pad", "yellow_pad.launch.py"),
 }
 ```
+
+The last two entries point **straight at other packages' launch files**,
+not at a thin `dome2` wrapper like the others (chapter 3). Both were split
+out so they can be toggled on their own:
+
+- **`battery`** (UPS telemetry) used to start inside `drivers`. Now
+  `--options "d b"` gives drivers plus battery, and `d` alone gives neither
+  telemetry nor its I2C reads.
+- **`yellow`** (Yellow Pad joystick teleop) is only wanted when someone is
+  driving by hand.
+
+Their prefixes stay unambiguous: `b` and `y` don't collide with any other
+name.
 
 Nav/SLAM used to be a subsystem here but is now launched separately, per mode,
 from the `dome_nav` package (`robot_map.launch.py`, `robot_nav.launch.py`,

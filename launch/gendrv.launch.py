@@ -24,4 +24,3 @@ def start_nav():
         urdf=urdf_path,
         ekf_config_path=ekf_config_path,
     )
-    bl.include("dome_telemetry", "robot.launch.py")

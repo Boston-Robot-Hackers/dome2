@@ -2,22 +2,14 @@
 
 ## Last session
 
-Date: 2026-08-05
+Date: 2026-11-05
 
-Checkpoint session: reworked `.claude/` process docs (removed
-`codereview.md` and `how_to_be.md`, updated `bootstrap.md`, `literate.md`,
-`process.md`, `settings.json`, `CLAUDE.md`). Along the way found and fixed
-a regression from the earlier nav-subsystem removal (93f2c97) — two tests
-in `test/test_launch_profiles.py` still asserted on a `"nav"` token that
-no longer resolves. Also cleared pre-existing `ruff check`/`ruff format`
-debt in the Python source (`launch/`, `test/`, `setup.py`): missing exec
-bits, import ordering, implicit-`Optional`, a self-calling lambda. Added
-`ruff.toml` to ignore `LOG015` — the fix (module-level `logging.getLogger`
-instead of the root logger) breaks `caplog`-based log assertions in this
-environment, so it's a deliberate exception, not unnoticed debt. Also
-updated `.claude/commands/checkpoint.md` to require asking the user before
-applying any ruff fix, and to state whether it aligns with
-`.claude/style_guide.md`.
+Checkpoint of a chore: `robot.launch.py` gained **`battery`** (battery
+telemetry, from `dome_telemetry`) and **`yellow`** (Yellow Pad joystick
+teleop) subsystems, so each can be turned on independently.
+`gendrv.launch.py` no longer includes the telemetry launch, so `drivers`
+alone doesn't start it. The base robot for power and semantic tests is now
+`bl dome2 robot.launch.py --options "d b"`.
 
 ## In progress
 
@@ -37,6 +29,12 @@ integration.md` in that package) needs to land first.
 
 ## Next up
 
+0. **Move the power load test here from `dome_semantic`.** It covers the
+   whole robot. Files: `tools/power_load_test.sh`, `tools/power_summary.awk`,
+   `test/test_power_load_test.py`, `process/02-doc/power_testing.md`. See
+   `dome_semantic`'s `current.md` for the full list of references to
+   update. Probably a feature here. It overlaps with F02 (a staged run
+   through the stack), so consider merging the two.
 1. Land `dome_control`'s F19 (dome_mission `/intent` integration) —
    tracked in that package, not here.
 2. Resume F02 (`03-features/notdone/F02-full-stack-smoke-test.md`) — T01
@@ -46,6 +44,9 @@ integration.md` in that package) needs to land first.
 
 ## Recent completions
 
+- 2026-11-05: Chore: `battery` and `yellow` subsystems; telemetry taken
+  out of `drivers`. `ruff format --check` flags 4 older files; they were
+  left alone, since this repo's checkpoint asks before any ruff fix.
 - 2026-08-05: Checkpoint — `.claude/` process rework, fixed nav-removal
   test regression, cleared ruff debt in Python source, `ruff.toml` added
   to record the one deliberate LOG015 exception.

@@ -1,0 +1,215 @@
+# Source for dome3.urdf. Edit this file, never dome3.urdf; regenerate with:
+#   PYTHONPATH=~/durdf python3 -m durdf.cli dome3.durdf dome3.urdf
+#
+# Origin: base_link is the centre of the round base plate, 7 cm above the
+# floor (base_footprint). x forward, y left, z up. The drive axle is 10 cm
+# forward of base_link.
+# Measurements (2026-11-12, tape measure) are good to about +/-0.5 cm.
+robot: dome2
+
+constants:
+  base_radius: 0.15
+  base_thickness: 0.003
+  base_height: 0.07       # measured 2026-11-12: plate top 7 cm above floor
+
+  wheel_radius: 0.035     # 7 cm diameter wheels
+  wheel_width: 0.0175
+  wheel_forward: 0.10
+  wheel_spacing: 0.125
+  wheel_drop: -0.035      # axle at wheel_radius above floor: 0.035 - base_height
+
+  caster_radius: 0.015
+  caster_back: -0.12
+  caster_z: -0.055        # caster touches floor: caster_radius - base_height
+
+  laser_post_width: 0.01
+  laser_post_height: 0.08    # display only: plate to lidar underside (0.105 - 0.05/2)
+  laser_post_z: 0.04        # half of laser_post_height
+
+  laser_radius: 0.03
+  laser_height: 0.05
+  laser_z: 0.05
+
+  laser_marker_length: 0.04
+  laser_marker_width: 0.002
+  laser_x_offset: 0.02
+  laser_y_offset: 0.02
+  laser_z_offset: 0.03
+
+  imu_forward: 0.0
+  imu_z: 0.05
+  imu_width: 0.02
+  imu_height: 0.01
+  imu_length: 0.03
+
+  imu_marker_length: 0.03
+  imu_marker_width: 0.002
+  imu_x_offset: 0.015
+  imu_y_offset: 0.01
+  imu_z_offset: 0.015
+
+  marker_radius: 0.001
+
+  camera_width: 0.02
+  camera_depth: 0.09
+  camera_height: 0.03
+  # Camera lens, measured 2026-11-12: 13 cm forward of plate centre,
+  # 14.5 cm above the floor = 0.145 - base_height.
+  camera_link_x_offset: 0.13
+  camera_link_z_offset: 0.075
+  # Optical-frame roll = -90deg + upward tilt. Tilt goes in the roll slot
+  # because URDF applies roll before the -90deg yaw. Calibrated 2026-11-12
+  # with the vision viewer's horizon line on a mark at lens height (14.5 cm):
+  # camera points 5deg DOWN (pitch_deg -5).
+  camera_roll: -95deg
+
+  laser_joint_x: -0.08     # measured 2026-11-12: 8 cm behind plate centre
+  laser_joint_z: 0.105     # lidar lens 17.5 cm above floor = 0.175 - base_height
+  laser_joint_yaw: -90deg   # lidar 0 deg points to the robot's right
+
+materials:
+  gray: [0.5, 0.5, 0.5, 1.0]
+  black: [0, 0, 0, 1]
+  red: [1, 0, 0, 1]
+  blue: [0.3, 0.3, 0.8, 1]
+  green: [0, 0.8, 0, 1]
+  yellow: [1, 1, 0, 1]
+  white: [1, 1, 1, 1]
+  dark_red: [0.5, 0, 0, 1]
+  dark_green: [0, 0.4, 0, 1]
+
+hierarchy:
+  base_footprint:
+    base_link:
+      left_wheel:
+      right_wheel:
+      caster:
+      imu_link:
+        imu_forward_link:
+        imu_left_link:
+        imu_up_link:
+      origin_marker_link:
+      laser_post_link:
+      laser:
+        laser_forward_link:
+        laser_left_link:
+        laser_up_link:
+      camera_link:
+
+links:
+  base_footprint: {}
+
+  base_link:
+    cylinder: [$base_radius, $base_thickness]
+    material: gray
+
+  left_wheel:
+    cylinder: [$wheel_radius, $wheel_width]
+    rpy: [90deg, 0, 0]
+    material: green
+
+  right_wheel:
+    cylinder: [$wheel_radius, $wheel_width]
+    rpy: [90deg, 0, 0]
+    material: red
+
+  caster:
+    sphere: [$caster_radius]
+    material: gray
+
+  laser_post_link:
+    box: [$laser_post_width, $laser_post_width, $laser_post_height]
+    material: blue
+
+  laser:
+    cylinder: [$laser_radius, $laser_height]
+    material: dark_green
+
+  laser_forward_link:
+    box: [$laser_marker_length, $laser_marker_width, $laser_marker_width]
+    material: red
+
+  laser_left_link:
+    box: [$laser_marker_width, $laser_marker_length, $laser_marker_width]
+    material: green
+
+  laser_up_link:
+    box: [$laser_marker_width, $laser_marker_width, $laser_marker_length]
+    material: blue
+
+  imu_link:
+    box: [$imu_length, $imu_width, $imu_height]
+    material: dark_red
+
+  imu_forward_link:
+    box: [$imu_marker_length, $imu_marker_width, $imu_marker_width]
+    material: red
+
+  imu_left_link:
+    box: [$imu_marker_width, $imu_marker_length, $imu_marker_width]
+    material: green
+
+  imu_up_link:
+    box: [$imu_marker_width, $imu_marker_width, $imu_marker_length]
+    material: blue
+
+  origin_marker_link:
+    sphere: [$marker_radius]
+    material: yellow
+
+  camera_link:
+    box: [$camera_depth, $camera_width, $camera_height]
+    material: black
+
+joints:
+  base_link:
+    xyz: [0, 0, $base_height]
+
+  left_wheel:
+    type: continuous
+    xyz: [$wheel_forward, $wheel_spacing, $wheel_drop]
+    axis: [0, 1, 0]
+
+  right_wheel:
+    type: continuous
+    xyz: [$wheel_forward, -$wheel_spacing, $wheel_drop]
+    axis: [0, 1, 0]
+
+  caster:
+    xyz: [$caster_back, 0, $caster_z]
+
+  laser_post_link:
+    xyz: [$laser_joint_x, 0, $laser_post_z]
+
+  laser:
+    xyz: [$laser_joint_x, 0, $laser_joint_z]
+    rpy: [0, 0, $laser_joint_yaw]
+
+  laser_forward_link:
+    xyz: [$laser_x_offset, 0, 0]
+
+  laser_left_link:
+    xyz: [0, $laser_y_offset, 0]
+
+  laser_up_link:
+    xyz: [0, 0, $laser_z_offset]
+
+  imu_link:
+    xyz: [$imu_forward, 0, $imu_z]
+    rpy: [0, 0, 0]
+
+  imu_forward_link:
+    xyz: [$imu_x_offset, 0, 0]
+
+  imu_left_link:
+    xyz: [0, $imu_y_offset, 0]
+
+  imu_up_link:
+    xyz: [0, 0, $imu_z_offset]
+
+  origin_marker_link:
+    xyz: [0, 0, 0]
+
+  camera_link:
+    xyz: [$camera_link_x_offset, 0, $camera_link_z_offset]
+    rpy: [$camera_roll, 0, -90deg]

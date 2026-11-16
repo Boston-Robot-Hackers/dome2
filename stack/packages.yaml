@@ -1,0 +1,44 @@
+# packages.yaml — every DOME package, its repo, and where it runs
+#
+# runs_on: robot | remote | both, recording where the package runs. Every
+# package is checked out on both computers; `make pull` pulls them all.
+# Keep the table in process/02-doc/spec.md and stack/README.md in step;
+# test/test_stack_registry.py checks both.
+
+packages:
+  - name: dome2
+    repo: git@github.com:Boston-Robot-Hackers/dome2.git
+    runs_on: both
+  - name: dome_control
+    repo: git@github.com:Boston-Robot-Hackers/dome_control.git
+    runs_on: robot
+  - name: dome_mission
+    repo: git@github.com:Boston-Robot-Hackers/dome_mission.git
+    runs_on: robot
+  - name: dome_nav
+    repo: git@github.com:Boston-Robot-Hackers/dome_nav.git
+    runs_on: robot
+  - name: dome_nav_msgs
+    repo: git@github.com:Boston-Robot-Hackers/dome_nav_msgs.git
+    runs_on: robot
+  - name: dome_semantic
+    repo: git@github.com:Boston-Robot-Hackers/dome_semantic.git
+    runs_on: both
+  - name: dome_semantic_msgs
+    repo: git@github.com:Boston-Robot-Hackers/dome_semantic_msgs.git
+    runs_on: both
+  - name: dome_telemetry
+    repo: git@github.com:Boston-Robot-Hackers/dome_telemetry.git
+    runs_on: robot
+  - name: dome_telemetry_msgs
+    repo: git@github.com:Boston-Robot-Hackers/dome_telemetry_msgs.git
+    runs_on: both
+  - name: dome_vision
+    repo: git@github.com:Boston-Robot-Hackers/dome_vision.git
+    runs_on: robot
+  - name: dome_viz
+    repo: git@github.com:Boston-Robot-Hackers/dome_viz.git
+    runs_on: remote
+  - name: dome_voice
+    repo: git@github.com:Boston-Robot-Hackers/dome_voice.git
+    runs_on: robot

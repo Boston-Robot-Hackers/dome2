@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # robot.launch.py — top-level dome2 launcher with profile and subsystem selection
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-16
+# Updated: 2026-11-16
 # Open Source Under MIT license
 #
 # Examples:
@@ -15,14 +18,13 @@
 #   bl dome_nav robot_nav.launch.py                       # Mode B: AMCL nav
 #   bl dome_nav robot_explore.launch.py --map_name <name> # Mode E: explore
 
-import logging
 import os
 
-import click
-from better_launch import BetterLaunch, launch_this
+from better_launch import launch_this
 
-SUBSYSTEMS = ["drivers", "control", "vision", "voice", "foxglove", "battery", "yellow"]
+from dome2.subsystem_launcher import launch_subsystems
 
+# Ordered: this order is the interactive prompt order and the include order.
 LAUNCH_FILES = {
     "drivers": ("dome2", "gendrv.launch.py"),
     "control": ("dome2", "dome_control.launch.py"),
@@ -33,27 +35,14 @@ LAUNCH_FILES = {
     "yellow": ("yellow_pad", "yellow_pad.launch.py"),
 }
 
+SUBSYSTEMS = list(LAUNCH_FILES)
+
 DEFAULT_PROFILE = os.environ.get("DOME_PROFILE", "robot")
-
-
-def resolve_tokens(options_str: str) -> list[str]:
-    resolved = []
-    for token in options_str.split():
-        matches = [s for s in SUBSYSTEMS if s.startswith(token.lower())]
-        if len(matches) == 1:
-            resolved.append(matches[0])
-        elif not matches:
-            logging.warning(f"Launch option '{token}' matches no subsystem, skipping")
-        else:
-            logging.warning(
-                f"Launch option '{token}' is ambiguous: matches {matches}, skipping"
-            )
-    return resolved
 
 
 @launch_this(ui=True)
 def start_nav(
-    profile: str = DEFAULT_PROFILE,
+    profile: str = "",
     options: str = "",
     is_interactive: bool = False,
 ):
@@ -72,23 +61,5 @@ def start_nav(
     is_interactive : bool
         Prompt yes/no for each subsystem before launching.
     """
-    if options:
-        token_str = options
-    else:
-        token_str = os.environ.get(profile)
-        if token_str is None:
-            raise ValueError(f"Profile '{profile}': no env var '{profile}' found")
-
-    active = set(resolve_tokens(token_str))
-    cfg = {s: s in active for s in SUBSYSTEMS}
-
-    if is_interactive:
-        logging.info(f"Profile '{profile}' — confirm each subsystem:")
-        for name in SUBSYSTEMS:
-            cfg[name] = click.confirm(f"  Launch {name}?", default=cfg[name])
-
-    bl = BetterLaunch()
-    for name, enabled in cfg.items():
-        if enabled:
-            pkg, launch_file = LAUNCH_FILES[name]
-            bl.include(pkg, launch_file)
+    # Literal "" default: bl parses the signature statically and can't evaluate names.
+    launch_subsystems(profile or DEFAULT_PROFILE, options, is_interactive, LAUNCH_FILES)

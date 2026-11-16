@@ -16,5 +16,54 @@
       "Read(./**/*.pem)",
       "Read(./**/id_rsa*)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/block-secrets.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit-ruff.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start-context.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "autoMode": {
+    "environment": [
+      "### Project: dome2",
+      "**Purpose**: Top-level bringup and launch orchestration for the DOME robot (drivers, control, nav, mission subsystems)",
+      "**Package manager**: ROS 2 colcon (ament_python); uv for dev commands",
+      "**Run**: bl dome2 robot.launch.py --options \"<tokens>\" on the robot",
+      "**Test**: uv run pytest",
+      "**Source control**: https://github.com/Boston-Robot-Hackers/dome2",
+      "**Protected branches**: main"
+    ],
+    "allow": [
+      "$defaults"
+    ]
   }
 }

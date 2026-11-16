@@ -4,13 +4,13 @@
 
 **Date Created:** 2026-11-16
 
-**Done:** no
+**Done:** yes
 
 **Tasks File Created:** yes
 
-**Tests Written:** no
+**Tests Written:** yes
 
-**Test Passing:** no
+**Test Passing:** yes
 
 **Description**: dome2 becomes the hub for the whole DOME software stack, not just the robot's launcher. It lives on both the robot and the remote computer.
 

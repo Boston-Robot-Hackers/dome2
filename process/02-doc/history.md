@@ -3,6 +3,12 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-16: F03 closed — dome2 is the stack hub: `stack/packages.yaml`
+  (12 packages), `make clone` / `make pull`, `remote.launch.py` (viz),
+  shared launcher modules, `stack/README.md`. Verified on robot and VM.
+- 2026-11-16: `.claude/` synced with the `j3` kit; process folders moved
+  under `process/`; task steps renumbered `TFNN.N`; header-stamping
+  pre-commit hook and Makefile added.
 - 2026-11-05: Chore: `battery` and `yellow` subsystems in
   `robot.launch.py`; telemetry taken out of `drivers`. Base robot for power
   and semantic tests is `bl dome2 robot.launch.py --options "d b"`.

@@ -4,29 +4,20 @@
 
 ### Pick up here (2026-11-16)
 
-**F03 (dome2 as the stack hub) is built; only TF03.6's manual runs are left.**
-Nothing is committed yet. That includes the `.claude/` sync with the `j3`
-kit and the move to `process/` from earlier this session.
+**F03 (dome2 as the stack hub) is closed.** It was verified on the robot and
+the VM: `make clone`, `make pull`, and `bl dome2 remote.launch.py --options "v"`
+serving dome_viz at `http://192.168.4.83:8080/`. 51 tests pass.
 
-- **New:** `stack/packages.yaml` (12 packages and where each runs),
-  `make clone` (clones any missing package next to dome2), `make pull`, `launch/remote.launch.py` (subsystem `viz`), and
-  `stack/README.md` as the starting point for stack-wide docs.
-- **`make pull` pulls all 12 packages on either computer.** The first
-  version selected packages by a `DOME_ROLE` host role; you asked for all of
-  them, so the role code and the `.bashrc` export are gone. `runs_on` only
-  records where a package runs. Verified on the robot: all 12 ok.
-- **Shared code:** both launchers use `dome2/launch_options.py` (pure) and
-  `dome2/subsystem_launcher.py`.
-- **Moved:** the onboarding guide is now `stack/dome_developer_onboarding.md`.
-- **Tests:** 51 pass with `python3 -m pytest test`. `setup.cfg` puts the
-  source tree first, so tests don't pick up the installed dome2.
-- **Still to run (TF03.6):** on the VM, clone dome2, `make clone`, build,
-  then `bl dome2 remote.launch.py --options "v"` (`stack/README.md`).
-  Writing a critique is not part of F03.
+- **VM build gotcha:** a package that moved repos can leave a stale
+  `build/<pkg>` cache pointing at its old source folder (seen with
+  `dome_telemetry_msgs`, which moved out of `dome_vision`). Delete
+  `build/<pkg>` and `install/<pkg>`, then rebuild.
+- **Open follow-up:** `bl.include` passes `remote.launch.py`'s own arguments
+  on to `view.launch.py`, so dome_viz's `--sim_time` can't be set through
+  the remote launcher yet. That only matters for replaying recorded data.
 
 ### Next
 
-0. Finish TF03.6 on the VM, then close F03.
 1. **Move the power load test here from `dome_semantic`.** Files:
    `tools/power_load_test.sh`, `tools/power_summary.awk`,
    `test/test_power_load_test.py`, `process/02-doc/power_testing.md`. See

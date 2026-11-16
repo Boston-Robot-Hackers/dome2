@@ -64,13 +64,13 @@
 
 ## TF03.6 — Test-writing and manual verification
 
-**Status**: not done
+**Status**: done
 
 **Description**: Fill any unit-test gaps left by TF03.1–TF03.5 and TF03.7 (edge cases: empty registry, `both` packages selected under each role). Record manual test notes (command, setup, expected, actual) for:
 - `make pull` on the robot.
 - `make pull` on the VM.
 - `bl dome2 remote.launch.py --options "v"` on the VM.
 
-**Progress (2026-11-16):** unit gaps filled (empty registry, literal-default regression for both launchers); 42 tests pass after the role code was removed. Done on the robot: `colcon build`, `bl dome2 robot.launch.py --help` and `remote.launch.py --help` show the three options; **Manual run, robot, 2026-11-16:** `export DOME_ROLE=robot` added to `~/.bashrc`; `make pull` in `~/ros2_ws/src/dome2`. Expected: the 11 robot-role packages pulled, dome_viz skipped. Actual: "Pulling 11 packages for role 'robot'", all 11 ok (already up to date), exit 0. **Re-run after the all-packages change, 2026-11-16:** `make pull` with no `DOME_ROLE`: "Pulling 12 packages", all 12 ok, exit 0; dome_viz fast-forwarded to `origin/main`. **`make clone`, robot, 2026-11-16:** all 12 already present, nothing cloned, exit 0. A one-entry registry pointed at a scratch `src/` cloned `dome_nav_msgs` for real, and a second run reported it already present. 51 tests pass. **Still to do:** `make clone` and `make pull` on the VM, and `remote.launch.py --options "v"` on the VM. (An actual critique is not part of F03.)
+**Progress (2026-11-16):** unit gaps filled (empty registry, literal-default regression for both launchers); 42 tests pass after the role code was removed. Done on the robot: `colcon build`, `bl dome2 robot.launch.py --help` and `remote.launch.py --help` show the three options; **Manual run, robot, 2026-11-16:** `export DOME_ROLE=robot` added to `~/.bashrc`; `make pull` in `~/ros2_ws/src/dome2`. Expected: the 11 robot-role packages pulled, dome_viz skipped. Actual: "Pulling 11 packages for role 'robot'", all 11 ok (already up to date), exit 0. **Re-run after the all-packages change, 2026-11-16:** `make pull` with no `DOME_ROLE`: "Pulling 12 packages", all 12 ok, exit 0; dome_viz fast-forwarded to `origin/main`. **`make clone`, robot, 2026-11-16:** all 12 already present, nothing cloned, exit 0. A one-entry registry pointed at a scratch `src/` cloned `dome_nav_msgs` for real, and a second run reported it already present. 51 tests pass. **Remote launch, VM, 2026-11-16:** after clearing a stale `build/dome_telemetry_msgs` (its cache still pointed at the old `src/dome_vision/dome_telemetry_msgs` location), `colcon build` succeeded. `bl dome2 remote.launch.py --options "v"` included `view.launch.py`, started `dome_viz_bridge`, and logged `http://192.168.4.83:8080/`. Expected and actual match. **`make clone` and `make pull`, VM, 2026-11-16:** both run by the user on the VM and reported working (output not pasted).
 
 **Test**: this is the test task. The manual runs need the robot and the VM, so they are kept out of the plain test run.

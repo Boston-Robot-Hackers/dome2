@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # subsystem_launcher — include the chosen subsystems' launch files
 # Author: Pito Salas and Claude Code
-# Version: 1
+# Version: 2
 # Created: 2026-11-16
 # Updated: 2026-11-16
 # Open Source Under MIT license
@@ -20,7 +20,11 @@ import os
 import click
 from better_launch import BetterLaunch
 
-from dome2.launch_options import resolve_tokens, token_string
+from dome2.launch_options import (
+    missing_profile_message,
+    resolve_tokens,
+    token_string,
+)
 
 
 def launch_subsystems(
@@ -30,7 +34,12 @@ def launch_subsystems(
     launch_files: dict[str, tuple[str, str]],
 ):
     subsystems = list(launch_files)
-    active = set(resolve_tokens(token_string(profile, options, os.environ), subsystems))
+    if not options and profile not in os.environ:
+        logging.info(missing_profile_message(profile, subsystems))
+        token_str = click.prompt("Which subsystems? (space-separated prefixes)")
+    else:
+        token_str = token_string(profile, options, os.environ)
+    active = set(resolve_tokens(token_str, subsystems))
     cfg = {name: name in active for name in subsystems}
 
     if is_interactive:

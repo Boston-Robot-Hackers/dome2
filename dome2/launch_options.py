@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # launch_options — pure token and profile resolution shared by dome2's launchers
 # Author: Pito Salas and Claude Code
-# Version: 1
+# Version: 2
 # Created: 2026-11-16
 # Updated: 2026-11-16
 # Open Source Under MIT license
@@ -32,6 +32,15 @@ def resolve_tokens(options_str: str, subsystems: list[str]) -> list[str]:
                 f"Launch option '{token}' is ambiguous: matches {matches}, skipping"
             )
     return resolved
+
+
+def missing_profile_message(profile: str, subsystems: list[str]) -> str:
+    """Explain that neither `--options` nor the profile env var was given."""
+    return (
+        f"No --options given and no env var '{profile}' is set.\n"
+        f"Available subsystems: {', '.join(subsystems)}.\n"
+        f'To skip this question next time: export {profile}="{subsystems[0][0]}"'
+    )
 
 
 def token_string(profile: str, options: str, environ: Mapping[str, str]) -> str:

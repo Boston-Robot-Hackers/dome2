@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # test_launch_profiles.py — tests for the launchers' profile and token logic
 # Author: Pito Salas and Claude Code
-# Version: 1
+# Version: 2
 # Created: 2026-11-16
 # Updated: 2026-11-16
 # Open Source Under MIT license
@@ -13,7 +13,11 @@ from pathlib import Path
 
 import pytest
 
-from dome2.launch_options import resolve_tokens, token_string
+from dome2.launch_options import (
+    missing_profile_message,
+    resolve_tokens,
+    token_string,
+)
 
 LAUNCH_DIR = Path(__file__).parent.parent / "launch"
 
@@ -85,6 +89,18 @@ class TestTokenString:
 
     def test_empty_env_var_is_an_empty_selection(self):
         assert token_string("robot", "", {"robot": ""}) == ""
+
+
+class TestMissingProfileMessage:
+    def test_names_the_profile(self):
+        assert "remote" in missing_profile_message("remote", ["viz"])
+
+    def test_lists_every_subsystem(self):
+        msg = missing_profile_message("robot", ["drive", "control"])
+        assert all(name in msg for name in ["drive", "control"])
+
+    def test_hint_uses_first_subsystem_prefix(self):
+        assert 'remote="v"' in missing_profile_message("remote", ["viz"])
 
 
 class TestRobotLaunch:

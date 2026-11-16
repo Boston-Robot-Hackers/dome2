@@ -4,37 +4,40 @@
 
 ### Pick up here (2026-11-16)
 
-**F03 (dome2 as the stack hub) is closed.** It was verified on the robot and
-the VM: `make clone`, `make pull`, and `bl dome2 remote.launch.py --options "v"`
-serving dome_viz at `http://192.168.4.83:8080/`. 51 tests pass.
+**F04 (ask for subsystems when no profile is set) is built; only TF04.3's
+manual run is left.** F03 is closed (verified on robot and VM).
 
-- **VM build gotcha:** a package that moved repos can leave a stale
-  `build/<pkg>` cache pointing at its old source folder (seen with
-  `dome_telemetry_msgs`, which moved out of `dome_vision`). Delete
-  `build/<pkg>` and `install/<pkg>`, then rebuild.
-- **Open follow-up:** `bl.include` passes `remote.launch.py`'s own arguments
-  on to `view.launch.py`, so dome_viz's `--sim_time` can't be set through
-  the remote launcher yet. That only matters for replaying recorded data.
+- **Behavior:** with no `--options` and no profile env var (e.g. `remote` on
+  the VM), both launchers now log which profile they looked for, the
+  subsystems, and an `export` hint, then `click.prompt` for tokens. Before,
+  this raised `ValueError`. `token_string()` still raises; the check lives in
+  `subsystem_launcher.py`.
+- **Tests:** 54 pass with `python3 -m pytest test`.
+- **Still to run (TF04.3, on the VM):** `colcon build --packages-select
+  dome2`, then `bl dome2 remote.launch.py` with `remote` unset, answer `v`.
 
 ### Next
 
-1. **Move the power load test here from `dome_semantic`.** Files:
+0. Run TF04.3 on the VM, then close F04.
+1. `bl.include` passes `remote.launch.py`'s own arguments on to
+   `view.launch.py`, so dome_viz's `--sim_time` can't be set through the
+   remote launcher yet. Only matters for replaying recorded data.
+2. **Move the power load test here from `dome_semantic`.** Files:
    `tools/power_load_test.sh`, `tools/power_summary.awk`,
    `test/test_power_load_test.py`, `process/02-doc/power_testing.md`. See
    `dome_semantic`'s `current.md` for the references to update. It overlaps
    with F02, so consider merging the two. The stack-wide parts could go in
    `stack/`.
-2. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
+3. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
    tracked in that package.
-3. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
+4. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
    TF02.0 and TF02.1 are pure and could start before F19. TF02.2/TF02.3
    should wait for F19.
 
 ### Caveats
 
-- **`uv` and `ruff` aren't installed on the Pi.** The post-edit ruff hook
-  does nothing here, `/checkpoint`'s `uv run` steps will fail, and F03's
-  code has not been linted.
+- **`uv` isn't installed on the Pi or the VM**, so `/checkpoint`'s `uv run`
+  steps fail. The VM has `ruff` at `~/.local/bin`; run it directly.
 - `package.xml` exec-depends on `yellow_pad` and `dome_telemetry`, which
   aren't on the remote computer. `rosdep install` there will complain;
   `colcon build` won't.

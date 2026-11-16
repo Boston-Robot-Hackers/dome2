@@ -17,6 +17,8 @@
 - `dome_control` vs `control` naming inconsistency in older docs — `dome_control` is correct.
 - Vision-control coupling must stay at ROS interface level (topics/services), not cross-package imports.
 
+- **Stale colcon cache after a repo move:** a package that moved repos can leave `build/<pkg>` pointing at its old source folder (seen with `dome_telemetry_msgs`, moved out of `dome_vision`). Delete `build/<pkg>` and `install/<pkg>`, then rebuild.
+
 ## Sibling packages
 
 `dome_control`, `dome_voice`, `dome_vision`, `dome_nav` all live under `~/ros2_ws/src/`.

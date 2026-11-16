@@ -3,6 +3,10 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-16: F04 built — launchers ask for subsystems instead of raising
+  when neither `--options` nor the profile env var is set. Manual TF04.3
+  pending. Also `chmod +x` on `dome2/launch_options.py` and
+  `dome2/subsystem_launcher.py` (ruff EXE001).
 - 2026-11-16: F03 closed — dome2 is the stack hub: `stack/packages.yaml`
   (12 packages), `make clone` / `make pull`, `remote.launch.py` (viz),
   shared launcher modules, `stack/README.md`. Verified on robot and VM.

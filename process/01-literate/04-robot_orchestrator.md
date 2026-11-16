@@ -117,6 +117,22 @@ def token_string(profile: str, options: str, environ: Mapping[str, str]) -> str:
 - Otherwise the profile's variable is read. **A missing variable raises**: launching nothing silently would look like a hardware fault.
 - An *empty* variable is a legitimate empty selection, so it returns `""`, not an error.
 
+### When neither is given: ask
+
+In practice the launcher never lets that raise reach the user. `launch_subsystems` checks the *both missing* case first and asks instead of crashing:
+
+```python
+if not options and profile not in os.environ:
+    logging.info(missing_profile_message(profile, subsystems))
+    token_str = click.prompt("Which subsystems? (space-separated prefixes)")
+else:
+    token_str = token_string(profile, options, os.environ)
+```
+
+- **The pure layer keeps its contract.** `token_string` still raises on a missing profile. The decision to prompt lives in the adapter, which is the only layer allowed to touch a terminal.
+- **`missing_profile_message`** is pure and tested. It names the profile it looked for, lists the subsystems, and suggests `export <profile>="<first letter>"` so the question doesn't come back.
+- The typed answer goes through `resolve_tokens` like any other token string, so prefixes and warnings behave the same.
+
 Each launcher has its own default profile name, read once at import:
 
 ```python
@@ -148,7 +164,7 @@ Two related constraints are pinned by tests:
 `launch_subsystems` runs the steps in order:
 
 ```python
-active = set(resolve_tokens(token_string(profile, options, os.environ), subsystems))
+active = set(resolve_tokens(token_str, subsystems))
 cfg = {name: name in active for name in subsystems}
 
 if is_interactive:
@@ -166,7 +182,7 @@ for name, is_enabled in cfg.items():
 
 ## Observations
 
-- **Profile indirection is still the least obvious part.** `DOME_PROFILE` naming another variable trips people up; the header examples in each launch file are the main documentation for it.
+- **Profile indirection is still the least obvious part.** `DOME_PROFILE` naming another variable trips people up. The prompt with its `export` hint now explains it at the moment it matters, rather than only in the launch files' header examples.
 - **Two dependencies sit outside the shared code's control.** `remote.launch.py`'s only entry relies on `dome_viz`'s `view.launch.py` keeping its name, and nothing checks that until launch time. A test that looks up each `LAUNCH_FILES` entry in the installed package index would catch a rename early.
 - **`package.xml` serves both computers.** It exec-depends on robot-only packages (`yellow_pad`, `dome_telemetry`), so `rosdep install` on the remote computer will complain even though nothing there needs them.
 - **`logging` uses the root logger** (ruff's LOG015 is waived in `ruff.toml`) because pytest's `caplog` here didn't reliably capture named loggers. A module logger would be cleaner if that is revisited.

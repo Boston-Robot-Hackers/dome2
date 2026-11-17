@@ -91,15 +91,14 @@ offers today.
   passes no config. `dome_vision_ros.launch.py` is the one the runs used.
   The proposal is to make the latter the new `robot.launch.py`, with a
   `$DOME_VISION_CONFIG` fallback and a working `--depth false`.
-- **Whether nav joins `robot.launch.py`.** Today nav is launched on its own
-  from `dome_nav` (Modes A, B and E), and mission from `dome_mission`. They
-  could become subsystems with a mode argument instead.
+- **Nav joins `robot.launch.py`: settled (2026-11-17).** dome2 gains `slam`
+  and `semantic` subsystems. The Nav2 modes come back after I13.
 - **Sim launch files: settled, out of scope.** `dome_nav`'s
   `sim_*.launch.py` were never tested. Building the sim out is F06. F05
   leaves those files alone.
-- **The `--sim_time` pass-through gap.** `bl.include` currently forwards
-  `remote.launch.py`'s own arguments to `view.launch.py`. Fix it here or
-  leave it.
+- **Argument forwarding: settled (2026-11-17), fixed in F05.** dome2's
+  launchers pass chosen arguments (`--sim_time`, `--map_name`) to the files
+  they include.
 
 ## How to Demo
 

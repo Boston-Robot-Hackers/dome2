@@ -84,9 +84,18 @@ the robot, and `bt_navigator` stays up.
 **Description**: Add `slam_manager` and `explorer_manager` with the sim
 tunings.
 
-**Test**: manual on the VM. An `exploration_start` intent on `/intent`
-makes the robot move and the map grow, and `/explore/status` reports
-progress.
+- Make the explorer its own stage, so `--options` can start it alone. This
+  replaces `just_explorer.launch.py`.
+- Move the tunings out of launch arguments into params YAML files in
+  `dome_nav/config/`, picked with one argument (e.g. `--explore_params`).
+  Start with the sim values that `simhowto.md` passes by hand.
+
+**Test**:
+
+- **Static:** a test that each explorer params file loads and names only
+  parameters the node declares.
+- **Manual on the VM:** an `exploration_start` intent on `/intent` makes
+  the robot move and the map grow, and `/explore/status` reports progress.
 
 ## TF06.6 — Stage 5: dome_viz on the sim
 

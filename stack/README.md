@@ -69,7 +69,8 @@ Both keep going past a failure, list every failure at the end, and exit nonzero 
 
 ## Other stack-wide docs
 
-- [`launch_inventory.md`](launch_inventory.md): every DOME launch file, whether it has been shown to work, and F05's proposed verdict.
+- [`launch_conventions.md`](launch_conventions.md): the rules every DOME launch file follows.
+- [`launch_inventory.md`](launch_inventory.md): every DOME launch file, whether it has been shown to work, and its F05 verdict.
 - [`dome_developer_onboarding.md`](dome_developer_onboarding.md): topics, services, messages, intent flow, and how to add CLI and voice commands. **It predates `dome_nav`, `dome_mission`, `dome_semantic` and `dome_viz`**, so check claims about those against their specs.
 
 ## Architectural critique: what to cover

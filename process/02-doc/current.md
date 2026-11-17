@@ -18,9 +18,14 @@
   - **Convention rules:** all DOME launch files use better_launch. A DOME
     package's launch files start only its own nodes (outside packages
     allowed); anything combining DOME packages lives in dome2.
-  - **TF05.0 done:** `stack/launch_inventory.md` (30 files, proposed
-    verdicts). Next: settle TF05.1's decisions with the user.
-- **F06 (build out the sim on the VM) is drafted, awaiting approval.** The
+  - **TF05.0 and TF05.1 done.** Verdicts are final in
+    `stack/launch_inventory.md`; rules in `stack/launch_conventions.md`.
+  - **TF05.2 in progress.** dome_control is done (committed, not pushed);
+    next is dome_mission (blocked file, so likely nothing), then dome_nav.
+  - **TF05.6 test written early:** `test/test_launch_conventions.py`.
+    Unconverted files are strict xfails in `NOT_YET_CONVERTED`; remove each
+    entry as its repo is fixed.
+- **F06 (build out the sim on the VM) is approved (2026-11-17), not started.** The
   `sim_*` files were never tested. See
   `process/03-features/notdone/F06-simulation.md`. TF06.0 needs the VM.
 - **Stack-wide shutdown fix, pushed in all 7 repos.** 11 node `main()`s
@@ -36,10 +41,10 @@
 1. **Run dome_viz's `test_main_shutdown.py` on the VM**, because the Pi has
    no `aiohttp`. It is the last check of the shutdown fix. The dome_control
    nodes stop cleanly on the robot (2026-11-17).
-2. **F05, TF05.1**: settle the decisions with the user: `just_explorer`,
-   `view.launch.py`'s name and the `--sim_time` pass-through, the `gendrv`
-   rename, dome_semantic's `remote.launch.py`. Run E5 (`--is_interactive`).
-3. **F06, TF06.0** on the VM, once F06 is approved.
+2. **F05, TF05.2**: bring each package's launch files to the convention
+   (`stack/launch_conventions.md`), one repo at a time. TF05.1 is settled;
+   verdicts are in `stack/launch_inventory.md`.
+3. **F06, TF06.0** on the VM. Approved, but don't start until the user says so.
 4. **Move the power load test here from `dome_semantic`.** Files:
    `tools/power_load_test.sh`, `tools/power_summary.awk`,
    `test/test_power_load_test.py`, `process/02-doc/power_testing.md`. See

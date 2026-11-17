@@ -1,8 +1,9 @@
 # DOME Launch File Inventory
 
 Every launch file in the registered DOME packages, as of **2026-11-17**. This
-is F05's TF05.0. The verdicts below are **proposals**. They become final when
-TF05.1 is settled with the user.
+is F05's TF05.0. **The verdicts below were confirmed by the user in TF05.1
+(2026-11-17).** The rules they apply are in
+[`launch_conventions.md`](launch_conventions.md).
 
 There are **30 files** in 9 packages. The 3 `*_msgs` packages have none.
 
@@ -10,7 +11,7 @@ There are **30 files** in 9 packages. The 3 `*_msgs` packages have none.
 
 - **Status** says whether the configuration has been *demonstrated*, and
   where the evidence is. E1–E3 are F05's own experiments (TF05.1).
-- **Proposed** uses these verdicts:
+- **Proposed** (now confirmed) uses these verdicts:
   - **keep**: stays as is, apart from header and argument clean-up.
   - **rename**: becomes the package's `robot.launch.py` or
     `remote.launch.py`.
@@ -27,7 +28,7 @@ There are **30 files** in 9 packages. The 3 `*_msgs` packages have none.
 |---|---|---|---|---|---|
 | `robot.launch.py` | Top level: includes the chosen subsystems | `profile`, `options`, `is_interactive` | 2026-11-16 | **Pass**: E1, E2a, E2c, E2d, `d b` in many runs | **keep** |
 | `remote.launch.py` | Top level: includes `dome_viz` | same | 2026-11-16 | **Pass**: F03, F04 on the VM | **keep** |
-| `gendrv.launch.py` | `linorobot2_bringup` with dome2's URDF and EKF | none | 2026-11-05 | **Pass**: every run (`d`) | **keep**. dome2 owns the drivers. Maybe rename to `drivers.launch.py` (**decide**). |
+| `gendrv.launch.py` | `linorobot2_bringup` with dome2's URDF and EKF | none | 2026-11-05 | **Pass**: every run (`d`) | **rename** to `drivers.launch.py` (decided 2026-11-17). dome2 owns the drivers. |
 | `dome_control.launch.py` | Wrapper: picks `dome_control`'s robot or remote file from `$DOME_MODE` | none | 2026-08-05 | Pass via E2a | **delete**. `LAUNCH_FILES` points at `dome_control` directly. Removes the hidden `$DOME_MODE` switch. |
 | `dome_vision.launch.py` | Wrapper for `dome_vision_ros`'s `robot.launch.py` | none | 2026-08-05 | Pass via E1 | **delete**. Point `LAUNCH_FILES` directly. |
 | `dome_voice.launch.py` | Wrapper for `dome_voice`'s `robot.launch.py` | none | 2026-08-05 | Fail via E2b | **delete**. Point `LAUNCH_FILES` directly. |
@@ -75,13 +76,13 @@ Experiments.
 |---|---|---|---|---|---|
 | `nav_experiment.launch.py` | SLAM + trimmed Nav2 + optional explorer, configs passed as paths | `slam_config`, `nav2_config`, `use_sim_time`, `map_name`, 2 tunings | 2026-07-30 | Experiment harness (C2 CPU work) | **delete**. Its one finding, the trimmed Nav2 node list, goes to I13's Nav2 rework. |
 | `nav2_experiment_navigation.launch.py` | Trimmed copy of `nav2_bringup`'s `navigation_launch.py` | ROS launch args | 2026-07-16 | **Plain ROS launch file**, which breaks the better_launch rule. Cut idle load from 5.46 to 1.07. | **delete** with `nav_experiment`. Record the trimmed `lifecycle_nodes` list in I13 first. |
-| `just_explorer.launch.py` | `explorer_manager_node` alone | `map_name`, `use_sim_time`, 12 tunings | 2026-07-30 | Debug tool for F31 (`simhowto.md`) | **decide**: delete, unless F31-style comparisons are still being run |
+| `just_explorer.launch.py` | `explorer_manager_node` alone | `map_name`, `use_sim_time`, 12 tunings | 2026-07-30 | Debug tool for F31 (`simhowto.md`) | **delete** (decided 2026-11-17). F06 makes the explorer its own stage, selectable with `--options`, and moves its tunings into params YAML files chosen by one argument. |
 
 ## dome_semantic (1 file)
 
 | File | Starts | Args | Last change | Status | Proposed |
 |---|---|---|---|---|---|
-| `semantic.launch.py` | `semantic_map_node`, plus a static `map → odom` TF if asked | `map_name`, `publish_every_n`, `static_map_odom` | 2026-11-05 | **Pass**: TF36.7 runs, `mon09` | **rename** to `robot.launch.py`. The registry says `both`, so ask whether it also needs a `remote.launch.py`. |
+| `semantic.launch.py` | `semantic_map_node`, plus a static `map → odom` TF if asked | `map_name`, `publish_every_n`, `static_map_odom` | 2026-11-05 | **Pass**: TF36.7 runs, `mon09` | **rename** to `robot.launch.py`. No `remote.launch.py` (decided 2026-11-17). New `semantic` subsystem in dome2. |
 
 ## dome_telemetry (1 file)
 
@@ -101,7 +102,7 @@ Experiments.
 
 | File | Starts | Args | Last change | Status | Proposed |
 |---|---|---|---|---|---|
-| `view.launch.py` | `bridge_node` and its web page | `sim_time`, `host`, `port` | 2026-11-15 | **Pass**: F03 on the VM | **decide**: rename to `remote.launch.py` to match the convention, or keep the name. Also settle the `--sim_time` pass-through gap. |
+| `view.launch.py` | `bridge_node` and its web page | `sim_time`, `host`, `port` | 2026-11-15 | **Pass**: F03 on the VM | **rename** to `remote.launch.py` (decided 2026-11-17). Argument forwarding, including `--sim_time`, is fixed in F05. |
 
 ## dome_voice (2 files)
 
@@ -112,19 +113,19 @@ Experiments.
 
 ## Summary of proposals
 
-- **keep**: 6. `dome2` `robot`, `remote`, `gendrv`; `dome_control` `robot`;
+- **keep**: 5. `dome2` `robot`, `remote`; `dome_control` `robot`;
   `dome_telemetry` `robot`; `dome_vision` `robot`. Plus `dome_voice` `robot`,
   parked.
-- **rename**: 2 now. `dome_nav` `robot_map` → `robot` (`--mode slam`);
-  `dome_semantic` `semantic` → `robot`.
+- **rename**: 4. `dome2` `gendrv` → `drivers`; `dome_nav` `robot_map` →
+  `robot` (`--mode slam`); `dome_semantic` `semantic` → `robot`; `dome_viz`
+  `view` → `remote`.
 - **merge**: 1. `dome_vision_ros.launch.py`.
-- **delete**: 9. Four dome2 wrappers; `dome_control` and `dome_voice`
-  `remote`; `dome_vision` `remote`; `nav_experiment` and
-  `nav2_experiment_navigation`.
+- **delete**: 10. Four dome2 wrappers; `dome_control` and `dome_voice`
+  `remote`; `dome_vision` `remote`; `nav_experiment`,
+  `nav2_experiment_navigation` and `just_explorer`.
 - **blocked**: 3. `robot_nav`, `robot_explore`, `mission_explore`.
 - **F06**: 6. The `sim_*` files.
-- **decide**: 3. `just_explorer`, `view.launch.py`'s name, and the `gendrv`
-  rename.
+- **decide**: none left. The remaining confirmations are in TF05.1.
 
 ## Things outside the launch files that must change too
 

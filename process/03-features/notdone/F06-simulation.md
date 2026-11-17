@@ -53,7 +53,12 @@ Each stage is shown to work on the VM before the next one starts:
    `/scan`, `/odom`, `/clock` and TF publishing.
 2. **SLAM**: `/map` and `map → odom`, with `slam_toolbox` reaching `active`.
 3. **Nav2**: a goal sent in sim moves the robot.
-4. **Exploration**: an `exploration_start` intent grows the map.
+4. **Exploration**: an `exploration_start` intent grows the map. The
+   explorer is its own stage, so `--options` can start it alone (this
+   replaces `dome_nav`'s `just_explorer.launch.py`). Its tunings live in
+   params YAML files in `dome_nav/config/`, chosen with one argument such as
+   `--explore_params <file>`. Comparing two tunings means running with two
+   files.
 5. **Viewing**: dome_viz shows the sim map, using sim time.
 
 ### Out of scope

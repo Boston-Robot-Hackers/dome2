@@ -39,7 +39,7 @@ F06, and 3 for the user to decide.
 
 ## TF05.1 — Run the experiments, then settle the decisions with the user
 
-**Status**: not done
+**Status**: done
 
 **Description**: The user runs these on the robot, since launching can move
 it. Record each result in the inventory.
@@ -104,10 +104,31 @@ it. Record each result in the inventory.
   same way. If they do, drop `--is_interactive` or launch without the UI.
 
 A file or option is kept only if it passes here or already has a pass on
-record. Then go through the inventory with the user and settle each item in F05's
-"Decisions this feature must settle" list. Write the result into the
-inventory as final verdicts, and write the convention into
-`stack/launch_conventions.md`:
+record.
+
+**Decisions settled with the user (2026-11-17):**
+
+1. **`view.launch.py` → `remote.launch.py`** in dome_viz. Update dome2's
+   `remote.launch.py` and dome_viz's Makefile.
+2. **Argument forwarding is fixed in F05** (TF05.4). dome2's launchers pass
+   chosen arguments (`--sim_time`, `--map_name`, later `--explore_params`)
+   to the files they include. F06 uses the same mechanism.
+3. **`gendrv.launch.py` → `drivers.launch.py`**, to match the subsystem name.
+4. **dome_semantic gets no `remote.launch.py`.** Only `robot.launch.py`.
+5. **New `slam` and `semantic` subsystems in dome2's `robot.launch.py`.**
+   The semantic-mapping run becomes one command, e.g.
+   `--options "d b s vi se" --map_name <name>`.
+6. **`just_explorer.launch.py` is deleted.** F06 replaces it.
+
+7. **The inventory's other proposals are confirmed**: the 10 deletions, the
+   `dome_nav` and `dome_semantic` renames, the vision merge, voice parked,
+   and the I13-blocked files left alone.
+
+**E5 moves to TF05.7**, because it only affects `--is_interactive`. The
+convention is written in `stack/launch_conventions.md`.
+
+The inventory now holds the final verdicts. The convention in
+`stack/launch_conventions.md` covers:
 
 - file names
 - argument style, including better_launch's limits: no `X | None`, and
@@ -122,7 +143,15 @@ TF05.6's test rules.
 
 ## TF05.2 — Make package-level launch files match the convention
 
-**Status**: not done
+**Status**: in progress
+
+**Progress:**
+
+- **dome_control: done** and passes TF05.6 (`9046e75`, not pushed).
+  Header, usage and docstrings added. `spin_survey`'s params moved to
+  `config/spin_survey.yaml` with the same values, plus
+  `test_spin_survey_params.py`. The header-stamping hook was installed,
+  since the repo had none. `remote.launch.py` is left for TF05.3.
 
 **Description**: Work one package at a time: dome_control, dome_mission,
 dome_nav, dome_semantic, dome_telemetry, dome_vision, dome_viz, dome_voice.
@@ -189,7 +218,25 @@ that every subsystem named in the docs exists in `LAUNCH_FILES`.
 
 ## TF05.6 — Write the launch-convention test suite
 
-**Status**: not done
+**Status**: in progress. Written ahead of TF05.2's other repos (2026-11-17),
+so each repo is checked as it is converted.
+
+**Progress:**
+
+- **`test/test_launch_conventions.py` is written.** It covers every check
+  below. With `/usr/bin/python3 -m pytest` the result is 49 passed, 9
+  skipped (known exceptions) and 22 xfailed.
+- **Unconverted files are strict xfails**, listed in `NOT_YET_CONVERTED`.
+  Each F05 step removes the entries it fixes. A listed entry that starts
+  passing fails the run, so the list can only shrink. The task is done when
+  the list is empty.
+- **The inventory test compares** each repo's files with the inventory rows
+  whose verdict is keep, blocked or F06. So TF05.3 must also rewrite the
+  renamed rows under their new names as **keep**.
+- **The stale-reference check leaves out** `launch_inventory.md` and
+  `launch_conventions.md`, which name deleted and planned files on purpose.
+- **`colcon test` runs 0 tests in dome2.** This was already true before
+  this file, and it still needs fixing.
 
 **Description**: Add `test/test_launch_conventions.py` to dome2. It is
 static, parses files with `ast`, and never launches anything. For every
@@ -227,6 +274,9 @@ reason is reported.
 - One package-level file run on its own.
 - **E4:** the semantic-mapping run from one top-level command, compared
   with the four-terminal procedure in `dome_semantic`'s notes.
+- **E5:** `bl dome2 robot.launch.py --is_interactive`. Do the yes/no
+  questions appear under better_launch's UI, or hang like F04's prompt? If
+  they hang, drop `--is_interactive` or launch without the UI.
 
 Record the results in the feature file.
 

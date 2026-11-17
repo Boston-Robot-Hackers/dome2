@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # robot.launch.py — top-level dome2 launcher with profile and subsystem selection
 # Author: Pito Salas and Claude Code
-# Version: 1
+# Version: 2
 # Created: 2026-11-16
-# Updated: 2026-11-16
+# Updated: 2026-11-17
 # Open Source Under MIT license
 #
 # Examples:
@@ -14,7 +14,7 @@
 #   bl dome2 robot.launch.py --is_interactive             # confirm each subsystem
 #
 # Nav/SLAM is launched separately per mode from the dome_nav package:
-#   bl dome_nav robot_map.launch.py --map_name <name>     # Mode A: mapping
+#   bl dome_nav robot.launch.py --map_name <name>         # Mode A: SLAM mapping
 #   bl dome_nav robot_nav.launch.py                       # Mode B: AMCL nav
 #   bl dome_nav robot_explore.launch.py --map_name <name> # Mode E: explore
 

@@ -20,8 +20,10 @@
     allowed); anything combining DOME packages lives in dome2.
   - **TF05.0 and TF05.1 done.** Verdicts are final in
     `stack/launch_inventory.md`; rules in `stack/launch_conventions.md`.
-  - **TF05.2 in progress.** dome_control is done (committed, not pushed);
-    next is dome_mission (blocked file, so likely nothing), then dome_nav.
+  - **TF05.2 in progress.** dome_control is done and verified on the robot.
+    dome_mission was skipped (blocked). dome_nav is done in code
+    (`robot.launch.py --mode slam`, no Nav2) but needs a robot run. Next is
+    dome_semantic.
   - **TF05.6 test written early:** `test/test_launch_conventions.py`.
     Unconverted files are strict xfails in `NOT_YET_CONVERTED`; remove each
     entry as its repo is fixed.

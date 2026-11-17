@@ -152,6 +152,25 @@ TF05.6's test rules.
   `config/spin_survey.yaml` with the same values, plus
   `test_spin_survey_params.py`. The header-stamping hook was installed,
   since the repo had none. `remote.launch.py` is left for TF05.3.
+  **Verified on the robot (2026-11-17)** with `--options "d c"`. All three
+  nodes came up, and `spin_survey` got `--params-file
+  .../share/dome_control/config/spin_survey.yaml`. `param get` showed
+  `step_angle_rad` 0.5, `pass_count` 2 and `pass_offset_rad` 0.5. Ctrl-C
+  stopped it cleanly.
+- **dome_nav: done in code, not yet run on the robot.**
+  - `robot_map.launch.py` was renamed to `robot.launch.py`, with
+    `--mode slam` (the only mode for now), a required `--map_name`, and
+    `--sim_time` (bool; it was `use_sim_time: str`).
+  - **Nav2 is dropped.** The file starts `slam_toolbox` (upstream include)
+    plus `slam_manager`, the setup E3 passed with.
+  - **The activation stall is not fixed.** A check-and-activate helper was
+    rejected as a kludge. The evidence is in dome_nav I13.
+  - The README usage and dome2's `robot.launch.py` comment were updated, and
+    the header hook was installed.
+  - dome_nav's pytest: 241 passed. The 4 failures in
+    `test_map_validation.py` were already there; they need a live stack.
+- **dome_mission: skipped.** Its only file, `mission_explore.launch.py`, is
+  a known exception, blocked on I13 and F19.
 
 **Description**: Work one package at a time: dome_control, dome_mission,
 dome_nav, dome_semantic, dome_telemetry, dome_vision, dome_viz, dome_voice.

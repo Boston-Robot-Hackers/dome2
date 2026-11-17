@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # launch_options — pure token and profile resolution shared by dome2's launchers
 # Author: Pito Salas and Claude Code
-# Version: 2
+# Version: 3
 # Created: 2026-11-16
-# Updated: 2026-11-16
+# Updated: 2026-11-17
 # Open Source Under MIT license
 """Turns a launcher's `--profile` / `--options` into a list of subsystems.
 
@@ -39,7 +39,8 @@ def missing_profile_message(profile: str, subsystems: list[str]) -> str:
     return (
         f"No --options given and no env var '{profile}' is set.\n"
         f"Available subsystems: {', '.join(subsystems)}.\n"
-        f'To skip this question next time: export {profile}="{subsystems[0][0]}"'
+        f'Run with --options "{subsystems[0][0]}", '
+        f'or set the profile: export {profile}="{subsystems[0][0]}"'
     )
 
 

@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 # test_launch_profiles.py — tests for the launchers' profile and token logic
 # Author: Pito Salas and Claude Code
-# Version: 2
+# Version: 3
 # Created: 2026-11-16
-# Updated: 2026-11-16
+# Updated: 2026-11-17
 # Open Source Under MIT license
 
 import ast
 import inspect
 import logging
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
+from conftest import install_better_launch_stub
 
 from dome2.launch_options import (
     missing_profile_message,
@@ -101,6 +103,38 @@ class TestMissingProfileMessage:
 
     def test_hint_uses_first_subsystem_prefix(self):
         assert 'remote="v"' in missing_profile_message("remote", ["viz"])
+
+
+class TestLaunchSubsystemsWithoutProfile:
+    """With no --options and no profile env var, the launcher exits."""
+
+    @pytest.fixture
+    def launcher(self, monkeypatch):
+        install_better_launch_stub()
+        from dome2 import subsystem_launcher
+
+        monkeypatch.delenv("remote", raising=False)
+        bl_class = Mock()
+        monkeypatch.setattr(subsystem_launcher, "BetterLaunch", bl_class)
+        return subsystem_launcher, bl_class
+
+    @pytest.mark.parametrize("is_interactive", [False, True])
+    def test_exits_without_launching(self, launcher, is_interactive):
+        subsystem_launcher, bl_class = launcher
+        launch_files = {"viz": ("dome_viz", "view.launch.py")}
+        with pytest.raises(SystemExit) as exit_info:
+            subsystem_launcher.launch_subsystems(
+                "remote", "", is_interactive, launch_files
+            )
+        assert exit_info.value.code == 1
+        bl_class.assert_not_called()
+
+    def test_logs_the_available_subsystems(self, launcher, caplog):
+        subsystem_launcher, _ = launcher
+        launch_files = {"viz": ("dome_viz", "view.launch.py")}
+        with caplog.at_level(logging.ERROR), pytest.raises(SystemExit):
+            subsystem_launcher.launch_subsystems("remote", "", False, launch_files)
+        assert "viz" in caplog.text
 
 
 class TestRobotLaunch:

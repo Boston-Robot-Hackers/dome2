@@ -102,6 +102,11 @@ it. Record each result in the inventory.
   5 cm cell apart.
 - **Still to do:** a live clean-stop check of the dome_control nodes.
 
+- **E5 (to run):** `bl dome2 robot.launch.py --is_interactive`. The F04
+  prompt never appeared under better_launch's UI (`ui=True` owns the
+  terminal), so `--is_interactive`'s `click.confirm` questions may hang the
+  same way. If they do, drop `--is_interactive` or launch without the UI.
+
 A file or option is kept only if it passes here or already has a pass on
 record. Then go through the inventory with the user and settle each item in F05's
 "Decisions this feature must settle" list. Write the result into the

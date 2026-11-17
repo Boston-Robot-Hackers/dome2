@@ -1,4 +1,4 @@
-# F04 — Ask for subsystems when no options and no profile are given
+# F04 — List the subsystems and exit when no options and no profile are given
 
 **Priority**: Medium
 
@@ -16,14 +16,20 @@
 machine where the profile env var (here `remote`) is unset currently crashes
 with `ValueError: Profile 'remote': no env var 'remote' found`.
 
-**Decision:** when both are missing, the launcher logs a friendly message —
-the profile it looked for, the available subsystems, and an `export` hint —
-then asks which subsystems to launch. The answer goes through the usual token
-resolution.
+**Decision:** when both are missing, the launcher logs a friendly error,
+then **exits with status 1 without launching anything**. The error names the
+profile it looked for, lists the available subsystems, and suggests either
+`--options "<letter>"` or `export <profile>="<letter>"`.
 
+- **It doesn't ask.** The first version prompted for tokens with
+  `click.prompt`. On the VM the prompt never appeared: better_launch's UI
+  (`ui=True`) owns the terminal and printed `WARNING: your terminal doesn't
+  support cursor position requests (CPR)`, then hung. **Decided 2026-11-17:
+  print the options and exit.**
+- It exits with `--is_interactive` too, for the same reason.
 - Applies to both `robot.launch.py` and `remote.launch.py` via the shared
   `launch_subsystems()`.
-- `token_string()` keeps raising on a missing profile; the launcher checks
+- `token_string()` keeps raising on a missing profile. The launcher checks
   first, so the pure layer's contract is unchanged.
 - A set-but-empty profile var still means "launch nothing", as before.
 
@@ -33,10 +39,10 @@ resolution.
 
 **Steps**:
 1. `bl dome2 remote.launch.py`
-2. At the prompt, type `v`.
 
-**Expected output**: a message naming profile `remote`, listing `viz`, and
-suggesting `export remote="v"`; then dome_viz launches.
+**Expected output**: an error naming profile `remote`, listing `viz`, and
+suggesting `--options "v"` or `export remote="v"`. The launcher then exits
+with no nodes started.
 
 ## Process Gate
 

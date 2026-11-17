@@ -25,14 +25,23 @@ This feature reviews every launch file in the registered DOME packages
 
 ### The convention
 
+- **Two levels (decided 2026-11-17).**
+  - **A DOME package's launch files start only its own nodes**, plus any
+    outside (non-DOME) packages they need, such as `slam_toolbox`,
+    `nav2_bringup` or `tf2_ros`. They never include another DOME package.
+  - **Anything that combines DOME packages is global and lives in dome2.**
+    The sim is global, so it is launched from dome2 (F06).
+  - Today only `dome_mission`'s `mission_explore` breaks this rule, by
+    including `dome_nav`. It is blocked on I13 anyway.
 - **Package level.** Each package that runs nodes has a `robot.launch.py`,
   plus a `remote.launch.py` if it runs on the remote computer. Optional
   launch arguments select variants (mode, config, sim time), so there is no
   separate file per variant.
 - **Top level.** dome2's `robot.launch.py` and `remote.launch.py` include the
   package-level files directly, chosen with the existing `--profile` /
-  `--options` / `--is_interactive` interface. Since F04, they ask for
-  subsystems when neither `--options` nor the profile env var is set.
+  `--options` / `--is_interactive` interface. Since F04, they list the
+  subsystems and stop when neither `--options` nor the profile env var is
+  set.
 - **Only demonstrated configurations.** A launch file or launch option stays
   only if it starts a configuration that has been shown to work. Everything
   else is deleted. Git history keeps it.
@@ -85,8 +94,9 @@ offers today.
 - **Whether nav joins `robot.launch.py`.** Today nav is launched on its own
   from `dome_nav` (Modes A, B and E), and mission from `dome_mission`. They
   could become subsystems with a mode argument instead.
-- **What to do with sim launch files** in `dome_nav` (`sim_*.launch.py`).
-  Sim runs on the remote computer, so it may belong in `remote.launch.py`.
+- **Sim launch files: settled, out of scope.** `dome_nav`'s
+  `sim_*.launch.py` were never tested. Building the sim out is F06. F05
+  leaves those files alone.
 - **The `--sim_time` pass-through gap.** `bl.include` currently forwards
   `remote.launch.py`'s own arguments to `view.launch.py`. Fix it here or
   leave it.

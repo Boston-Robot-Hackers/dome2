@@ -11,7 +11,7 @@ For each task step, add a test when feasible. If not feasible, note why.
 
 ## TF05.0 — Inventory every DOME launch file
 
-**Status**: not done
+**Status**: done
 
 **Description**: Write `stack/launch_inventory.md`. It gets one row per
 launch file in the 12 registered packages, with these columns:
@@ -23,23 +23,19 @@ launch file in the 12 registered packages, with these columns:
 - its last commit date
 - whether dome2 or another launch file references it
 
-The inventory currently covers 33 files:
-
-- dome2: 7
-- dome_control: 2
-- dome_mission: 1
-- dome_nav: 12
-- dome_semantic: 1
-- dome_telemetry: 1
-- dome_vision: 3
-- dome_viz: 1
-- dome_voice: 2
+The inventory covers **30 files**. dome2 has 7, dome_control 2,
+dome_mission 1, dome_nav 12, dome_semantic 1, dome_telemetry 1, dome_vision 3,
+dome_viz 1 and dome_voice 2. An earlier count of 33 was wrong.
 
 Each row also gets a proposed verdict: **keep**, **merge into
 `robot`/`remote`**, or **delete**.
 
 **Test**: none, because this is a document. TF05.6 checks the inventory
 against the launch folders.
+
+**Result (2026-11-17):** `stack/launch_inventory.md`. Proposed: 6 keep (plus
+voice, parked), 2 rename, 1 merge, 9 delete, 3 blocked, 6 sim files left to
+F06, and 3 for the user to decide.
 
 ## TF05.1 — Run the experiments, then settle the decisions with the user
 
@@ -173,8 +169,8 @@ launch file, README or `stack/` doc.
   the driver bringup.
 - Add nav/mission subsystems if TF05.1 decided to.
 - Fix the `--sim_time` pass-through if TF05.1 decided to.
-- Update `remote.launch.py` with any remote subsystems that were agreed,
-  e.g. sim.
+- Update `remote.launch.py` with any remote subsystems that were agreed.
+  The sim is not one of them: it is F06.
 
 **Test**: Extend `test/` to check that every `LAUNCH_FILES` entry in
 `robot.launch.py` and `remote.launch.py` names a launch file that exists in
@@ -205,6 +201,9 @@ registered package checked out next to dome2, it checks:
   with literal defaults.
 - No file imports `launch` / `launch_ros` or builds a
   `LaunchDescription`. Every launch file is better_launch only.
+- A package-level launch file never includes another registered DOME
+  package. Outside packages are allowed. Only dome2 may combine DOME
+  packages. Files blocked on I13 are listed as known exceptions.
 - No launch file, README or `stack/` doc references a launch file that no
   longer exists.
 - Every top-level `LAUNCH_FILES` target exists.

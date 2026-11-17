@@ -9,6 +9,11 @@ on both the robot and the remote computer.
   `remote.launch.py` on the remote computer, both choosing subsystems with
   the same `--profile` / `--options` / `--is_interactive` interface. No
   robot logic lives here.
+- **Global vs package launch files.** A DOME package's launch files start
+  only its own nodes, plus any outside (non-DOME) packages they need. They
+  never include another DOME package. Anything that combines DOME packages
+  is *global* and lives in dome2. That includes the **simulation** of the
+  DOME stack on the remote computer.
 - **Stack registry.** `stack/packages.yaml` lists every DOME package, its
   repo, and where it runs (`robot`, `remote` or `both`).
 - **Cross-package operations.** Tools that act on every package in the

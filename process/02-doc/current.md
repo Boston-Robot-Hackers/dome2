@@ -4,7 +4,7 @@
 
 ### Pick up here (2026-11-17)
 
-**F04 is closed. F05 is open.**
+**F04 is closed. F05 and F06 are open.**
 
 - **F05 (consistent, correct launch files) is drafted, and most of its robot
   experiments are done.** See
@@ -15,8 +15,14 @@
     plus `slam_toolbox`).
   - **Fail:** `d vo`. `voice_input` has no `openwakeword` module, and the
     voice board is out.
-  - **New convention rule:** all DOME launch files use better_launch. They
-    may include external ROS launch files.
+  - **Convention rules:** all DOME launch files use better_launch. A DOME
+    package's launch files start only its own nodes (outside packages
+    allowed); anything combining DOME packages lives in dome2.
+  - **TF05.0 done:** `stack/launch_inventory.md` (30 files, proposed
+    verdicts). Next: settle TF05.1's decisions with the user.
+- **F06 (build out the sim on the VM) is drafted, awaiting approval.** The
+  `sim_*` files were never tested. See
+  `process/03-features/notdone/F06-simulation.md`. TF06.0 needs the VM.
 - **Stack-wide shutdown fix, pushed in all 7 repos.** 11 node `main()`s
   printed an `ExternalShutdownException` traceback on stop. Each is fixed
   and has a regression test. See `chores.md`.
@@ -30,17 +36,18 @@
 1. **Run dome_viz's `test_main_shutdown.py` on the VM**, because the Pi has
    no `aiohttp`. It is the last check of the shutdown fix. The dome_control
    nodes stop cleanly on the robot (2026-11-17).
-2. **F05, TF05.0**: write `stack/launch_inventory.md`, then settle TF05.1's
-   decisions with the user. The `--sim_time` pass-through to dome_viz is one
-   of those decisions.
-3. **Move the power load test here from `dome_semantic`.** Files:
+2. **F05, TF05.1**: settle the decisions with the user: `just_explorer`,
+   `view.launch.py`'s name and the `--sim_time` pass-through, the `gendrv`
+   rename, dome_semantic's `remote.launch.py`. Run E5 (`--is_interactive`).
+3. **F06, TF06.0** on the VM, once F06 is approved.
+4. **Move the power load test here from `dome_semantic`.** Files:
    `tools/power_load_test.sh`, `tools/power_summary.awk`,
    `test/test_power_load_test.py`, `process/02-doc/power_testing.md`. See
    `dome_semantic`'s `current.md` for the references to update. It overlaps
    with F02.
-4. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
+5. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
    tracked in that package.
-5. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
+6. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
    TF02.0 and TF02.1 could start now. TF02.2 and TF02.3 should wait for F19.
    F05's launch commands should come first.
 

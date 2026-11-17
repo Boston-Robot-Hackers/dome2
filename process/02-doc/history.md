@@ -3,6 +3,9 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-17: F05 TF05.0 done: `stack/launch_inventory.md`. Two-level launch
+  rule decided and added to the spec. Sim declared untested; F06 (sim on the
+  VM) drafted.
 - 2026-11-17: F04 closed. With no `--options` and no profile env var, the
   launchers log the subsystems and call `BetterLaunch().shutdown()` (exit
   status 0). Two earlier versions failed on the VM under better_launch's UI:

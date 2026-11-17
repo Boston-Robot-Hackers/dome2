@@ -3,7 +3,23 @@
 ## Environment
 
 - Platform: Raspberry Pi, Linux 6.8.0-1057-raspi
-- ROS2 distro: verify actual target (docs mention both Humble and Jazzy — resolve before chasing build issues)
+- ROS 2 distro: **Kilted** on the robot (`/opt/ros/kilted`). Some package docs still say Jazzy.
+
+## Runtime gotchas (found 2026-11-17)
+
+- **Use the ROS daemon for checks.** `ros2 node list --no-daemon` returned a
+  different subset of nodes each time. After `ros2 daemon stop; ros2 daemon
+  start`, the list was complete and stable.
+- **`slam_toolbox` is a lifecycle node on Kilted** (2.9.0). Its launch file
+  can fail to activate it; see `dome_nav` I13. Check with `ros2 lifecycle
+  get /slam_toolbox`.
+- **`foxglove_bridge` 3.4.1 speaks only `foxglove.sdk.v1`.** Older clients
+  can't connect.
+- **Kilted's rclpy raises `ExternalShutdownException` from `spin`** when a
+  launch is stopped. Every node `main()` must catch it with
+  `KeyboardInterrupt`, then `destroy_node()` and `rclpy.try_shutdown()`.
+- **ALSA lists `seeed2micvoicec` even with the voice board removed**, so it
+  can't be used to detect the board.
 
 ## Key design decisions
 

@@ -27,10 +27,9 @@
 
 ### Next
 
-1. **Finish checking the shutdown fix.** Run dome_viz's
-   `test_main_shutdown.py` on the VM, because the Pi has no `aiohttp`. Then
-   do a live clean-stop check of the dome_control nodes: run `d c`, then
-   Ctrl-C.
+1. **Run dome_viz's `test_main_shutdown.py` on the VM**, because the Pi has
+   no `aiohttp`. It is the last check of the shutdown fix. The dome_control
+   nodes stop cleanly on the robot (2026-11-17).
 2. **F05, TF05.0**: write `stack/launch_inventory.md`, then settle TF05.1's
    decisions with the user. The `--sim_time` pass-through to dome_viz is one
    of those decisions.

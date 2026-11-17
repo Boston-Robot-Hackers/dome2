@@ -6,8 +6,9 @@
 
 **Two features are open.**
 
-- **F04 (no profile set) now lists the subsystems and exits.** The prompt
-  hung under better_launch's UI on the VM, so it was replaced (2026-11-17).
+- **F04 (no profile set) now lists the subsystems and shuts down.** On the
+  VM, a prompt hung under better_launch's UI, and `sys.exit` left the UI
+  asking to quit. Now it calls `BetterLaunch().shutdown()` (exit status 0).
   Only TF04.3's manual re-run on the VM is left.
 - **F05 (consistent, correct launch files) is drafted, and most of its robot
   experiments are done.** See
@@ -32,7 +33,8 @@
 
 1. **Run TF04.3 on the VM, then close F04.** Run `git pull` and `colcon
    build --packages-select dome2`, then `bl dome2 remote.launch.py` with
-   `remote` unset. Expect the subsystem list and an exit.
+   `remote` unset. Expect the subsystem list, then the shell with no quit
+   question.
 2. **Finish checking the shutdown fix.** Run dome_viz's
    `test_main_shutdown.py` on the VM, because the Pi has no `aiohttp`. Then
    do a live clean-stop check of the dome_control nodes: run `d c`, then

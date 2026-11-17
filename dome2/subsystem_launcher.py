@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # subsystem_launcher — include the chosen subsystems' launch files
 # Author: Pito Salas and Claude Code
-# Version: 3
+# Version: 4
 # Created: 2026-11-16
 # Updated: 2026-11-17
 # Open Source Under MIT license
@@ -12,13 +12,15 @@
 `launch_subsystems`. It resolves the profile or options with
 `launch_options`, optionally asks yes/no per subsystem, and includes the
 launch file of each enabled one. With neither `--options` nor the profile's
-env var, it logs the available subsystems and exits: better_launch's UI owns
-the terminal, so a prompt for tokens never appears.
+env var, it logs the available subsystems and shuts down without launching
+anything. It can't prompt (better_launch's UI owns the terminal) and can't
+`sys.exit` (the launch function runs in a worker thread under the UI, so the
+exit would end only that thread). Shutting the `BetterLaunch` instance down
+makes the UI quit on its own; the exit status is then 0.
 """
 
 import logging
 import os
-import sys
 
 import click
 from better_launch import BetterLaunch
@@ -39,7 +41,8 @@ def launch_subsystems(
     subsystems = list(launch_files)
     if not options and profile not in os.environ:
         logging.error(missing_profile_message(profile, subsystems))
-        sys.exit(1)
+        BetterLaunch().shutdown("no subsystems selected")
+        return
     token_str = token_string(profile, options, os.environ)
     active = set(resolve_tokens(token_str, subsystems))
     cfg = {name: name in active for name in subsystems}

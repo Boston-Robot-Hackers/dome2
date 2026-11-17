@@ -17,7 +17,7 @@ machine where the profile env var (here `remote`) is unset currently crashes
 with `ValueError: Profile 'remote': no env var 'remote' found`.
 
 **Decision:** when both are missing, the launcher logs a friendly error,
-then **exits with status 1 without launching anything**. The error names the
+then **shuts down without launching anything**. The error names the
 profile it looked for, lists the available subsystems, and suggests either
 `--options "<letter>"` or `export <profile>="<letter>"`.
 
@@ -26,7 +26,12 @@ profile it looked for, lists the available subsystems, and suggests either
   (`ui=True`) owns the terminal and printed `WARNING: your terminal doesn't
   support cursor position requests (CPR)`, then hung. **Decided 2026-11-17:
   print the options and exit.**
-- It exits with `--is_interactive` too, for the same reason.
+- **Not `sys.exit(1)`.** That was tried next. Under the UI, the launch
+  function runs in a worker thread, so the exit ended only that thread. The
+  UI stayed up and asked "Shutdown nodes and quit?". The launcher now calls
+  `shutdown()` on the `BetterLaunch` instance, which makes the UI quit by
+  itself. **The exit status is 0, not 1.**
+- It stops with `--is_interactive` too, for the same reason.
 - Applies to both `robot.launch.py` and `remote.launch.py` via the shared
   `launch_subsystems()`.
 - `token_string()` keeps raising on a missing profile. The launcher checks
@@ -41,8 +46,8 @@ profile it looked for, lists the available subsystems, and suggests either
 1. `bl dome2 remote.launch.py`
 
 **Expected output**: an error naming profile `remote`, listing `viz`, and
-suggesting `--options "v"` or `export remote="v"`. The launcher then exits
-with no nodes started.
+suggesting `--options "v"` or `export remote="v"`. The launcher then
+returns to the shell by itself, with no nodes started and no quit question.
 
 ## Process Gate
 

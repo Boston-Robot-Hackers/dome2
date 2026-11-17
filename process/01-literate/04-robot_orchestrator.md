@@ -117,20 +117,22 @@ def token_string(profile: str, options: str, environ: Mapping[str, str]) -> str:
 - Otherwise the profile's variable is read. **A missing variable raises**: launching nothing silently would look like a hardware fault.
 - An *empty* variable is a legitimate empty selection, so it returns `""`, not an error.
 
-### When neither is given: list and exit
+### When neither is given: list and shut down
 
-In practice the launcher never lets that raise reach the user. `launch_subsystems` checks the *both missing* case first, says what it can launch, and exits:
+In practice the launcher never lets that raise reach the user. `launch_subsystems` checks the *both missing* case first, says what it can launch, and shuts down without launching anything:
 
 ```python
 if not options and profile not in os.environ:
     logging.error(missing_profile_message(profile, subsystems))
-    sys.exit(1)
+    BetterLaunch().shutdown("no subsystems selected")
+    return
 token_str = token_string(profile, options, os.environ)
 ```
 
-- **The pure layer keeps its contract.** `token_string` still raises on a missing profile. The decision to exit lives in the adapter, which is the only layer allowed to touch the process or a terminal.
+- **The pure layer keeps its contract.** `token_string` still raises on a missing profile. The decision to stop lives in the adapter, which is the only layer allowed to touch the process or a terminal.
 - **`missing_profile_message`** is pure and tested. It names the profile it looked for, lists the subsystems, and suggests either `--options "<first letter>"` or `export <profile>="<first letter>"`.
-- **Why it doesn't ask.** An earlier version used `click.prompt` here. Under `@launch_this(ui=True)`, better_launch's terminal UI owns the screen, so the prompt never appeared and the launch just hung. Exiting with the list is simpler and always visible. It exits even with `--is_interactive`, for the same reason.
+- **Why it doesn't ask.** An earlier version used `click.prompt` here. Under `@launch_this(ui=True)`, better_launch's terminal UI owns the screen, so the prompt never appeared and the launch just hung. Stopping with the list is simpler and always visible. It stops even with `--is_interactive`, for the same reason.
+- **Why not `sys.exit`.** Under the UI, better_launch runs the launch function in a worker thread. A `SystemExit` there ends only that thread; the UI kept running and asked "Shutdown nodes and quit?". Calling `shutdown()` on the `BetterLaunch` instance instead lets the UI's `spin()` return at once, and the UI quits by itself. The cost: the process exits with status 0, not 1.
 
 Each launcher has its own default profile name, read once at import:
 

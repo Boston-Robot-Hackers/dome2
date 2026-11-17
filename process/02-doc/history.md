@@ -6,8 +6,8 @@ here to keep `current.md` focused on what's recent and relevant.
 - 2026-11-17: F05 drafted (consistent launch files; first drafted as F04,
   renumbered after the remote's F04). Robot experiments E1–E3 run; results
   are in TF05.1. Convention rule added: all DOME launch files use
-  better_launch. Stack-wide `ExternalShutdownException` shutdown fix made in
-  7 repos (uncommitted). SLAM params and activation findings added to
+  better_launch. Stack-wide `ExternalShutdownException` shutdown fix committed
+  and pushed in 7 repos. SLAM params and activation findings added to
   `dome_nav` I13.
 - 2026-11-16: F04 built — launchers ask for subsystems instead of raising
   when neither `--options` nor the profile env var is set. Manual TF04.3

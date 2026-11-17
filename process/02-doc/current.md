@@ -19,36 +19,34 @@
     voice board is out.
   - **New convention rule:** all DOME launch files use better_launch. They
     may include external ROS launch files.
-- **Stack-wide shutdown fix, uncommitted.** 11 node `main()`s across 7 repos
+- **Stack-wide shutdown fix, pushed in all 7 repos.** 11 node `main()`s
   printed an `ExternalShutdownException` traceback on stop. Each is fixed
   and has a regression test. See `chores.md`.
 - **SLAM params need a fresh start.** `dome_nav`'s
   `mapper_params_online_async.yaml` has three keys Kilted ignores, and
   `slam_toolbox` sometimes doesn't activate. Both are added to `dome_nav`
-  I13, which is also uncommitted there.
+  I13 (pushed).
 
 ### Next
 
 1. **Run TF04.3 on the VM, then close F04.** Run `colcon build
    --packages-select dome2`, then `bl dome2 remote.launch.py` with `remote`
    unset, and answer `v`.
-2. **Commit the shutdown fix**: one commit per repo in dome_control,
-   dome_mission, dome_nav, dome_telemetry, dome_vision, dome_viz and
-   dome_voice. Run dome_viz's `test_main_shutdown.py` on the VM first,
-   because the Pi has no `aiohttp`.
-3. **Live clean-stop check** of the dome_control nodes: run `d c`, then
+2. **Finish checking the shutdown fix.** Run dome_viz's
+   `test_main_shutdown.py` on the VM, because the Pi has no `aiohttp`. Then
+   do a live clean-stop check of the dome_control nodes: run `d c`, then
    Ctrl-C.
-4. **F05, TF05.0**: write `stack/launch_inventory.md`, then settle TF05.1's
+3. **F05, TF05.0**: write `stack/launch_inventory.md`, then settle TF05.1's
    decisions with the user. The `--sim_time` pass-through to dome_viz is one
    of those decisions.
-5. **Move the power load test here from `dome_semantic`.** Files:
+4. **Move the power load test here from `dome_semantic`.** Files:
    `tools/power_load_test.sh`, `tools/power_summary.awk`,
    `test/test_power_load_test.py`, `process/02-doc/power_testing.md`. See
    `dome_semantic`'s `current.md` for the references to update. It overlaps
    with F02.
-6. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
+5. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
    tracked in that package.
-7. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
+6. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
    TF02.0 and TF02.1 could start now. TF02.2 and TF02.3 should wait for F19.
    F05's launch commands should come first.
 

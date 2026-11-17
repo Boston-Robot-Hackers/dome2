@@ -41,7 +41,7 @@ ruff on changed files.
 
 ## TF04.3 — Manual check
 
-**Status**: not done
+**Status**: done
 
 **Description**: Run the F04 demo by hand (`bl dome2 remote.launch.py` with no
 profile var set). Confirm the message is shown and the launcher returns to the
@@ -50,5 +50,8 @@ shell by itself, without starting anything or asking to quit.
 First run, 2026-11-17 on the VM, with the old prompt: the message showed, then
 the prompt hung. Second run, with `sys.exit(1)`: the message showed, then the
 UI asked "Shutdown nodes and quit?". Both led to the current TF04.1.
+
+Third run, 2026-11-17 on the VM, with `BetterLaunch().shutdown()`: **clean**. The
+message showed and the launcher returned to the shell by itself.
 
 **Test**: manual — launching can start nodes on the robot.

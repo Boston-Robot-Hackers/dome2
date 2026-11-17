@@ -3,6 +3,11 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-17: F04 closed. With no `--options` and no profile env var, the
+  launchers log the subsystems and call `BetterLaunch().shutdown()` (exit
+  status 0). Two earlier versions failed on the VM under better_launch's UI:
+  `click.prompt` never appeared, and `sys.exit(1)` ended only the UI's worker
+  thread. Verified clean on the VM.
 - 2026-11-17: F05 drafted (consistent launch files; first drafted as F04,
   renumbered after the remote's F04). Robot experiments E1–E3 run; results
   are in TF05.1. Convention rule added: all DOME launch files use

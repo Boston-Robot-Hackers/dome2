@@ -4,12 +4,8 @@
 
 ### Pick up here (2026-11-17)
 
-**Two features are open.**
+**F04 is closed. F05 is open.**
 
-- **F04 (no profile set) now lists the subsystems and shuts down.** On the
-  VM, a prompt hung under better_launch's UI, and `sys.exit` left the UI
-  asking to quit. Now it calls `BetterLaunch().shutdown()` (exit status 0).
-  Only TF04.3's manual re-run on the VM is left.
 - **F05 (consistent, correct launch files) is drafted, and most of its robot
   experiments are done.** See
   `process/03-features/notdone/F05-launch-file-cleanup.md` and
@@ -31,25 +27,21 @@
 
 ### Next
 
-1. **Run TF04.3 on the VM, then close F04.** Run `git pull` and `colcon
-   build --packages-select dome2`, then `bl dome2 remote.launch.py` with
-   `remote` unset. Expect the subsystem list, then the shell with no quit
-   question.
-2. **Finish checking the shutdown fix.** Run dome_viz's
+1. **Finish checking the shutdown fix.** Run dome_viz's
    `test_main_shutdown.py` on the VM, because the Pi has no `aiohttp`. Then
    do a live clean-stop check of the dome_control nodes: run `d c`, then
    Ctrl-C.
-3. **F05, TF05.0**: write `stack/launch_inventory.md`, then settle TF05.1's
+2. **F05, TF05.0**: write `stack/launch_inventory.md`, then settle TF05.1's
    decisions with the user. The `--sim_time` pass-through to dome_viz is one
    of those decisions.
-4. **Move the power load test here from `dome_semantic`.** Files:
+3. **Move the power load test here from `dome_semantic`.** Files:
    `tools/power_load_test.sh`, `tools/power_summary.awk`,
    `test/test_power_load_test.py`, `process/02-doc/power_testing.md`. See
    `dome_semantic`'s `current.md` for the references to update. It overlaps
    with F02.
-5. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
+4. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
    tracked in that package.
-6. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
+5. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
    TF02.0 and TF02.1 could start now. TF02.2 and TF02.3 should wait for F19.
    F05's launch commands should come first.
 

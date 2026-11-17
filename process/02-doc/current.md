@@ -4,59 +4,57 @@
 
 ### Pick up here (2026-11-17)
 
-**F04 is closed. F05 and F06 are open.**
+**F05 TF05.2 is in progress, and TF05.6 is written early.** Details are in
+`process/04-tasks/notdone/TF05-launch-file-cleanup.md`.
 
-- **F05 (consistent, correct launch files) is drafted, and most of its robot
-  experiments are done.** See
-  `process/03-features/notdone/F05-launch-file-cleanup.md` and
-  `process/04-tasks/notdone/TF05-launch-file-cleanup.md`. TF05.1 holds the
-  results:
-  - **Pass:** `d vi`, `d c`, `d f`, `d y`, and SLAM without Nav2 (`d b`
-    plus `slam_toolbox`).
-  - **Fail:** `d vo`. `voice_input` has no `openwakeword` module, and the
-    voice board is out.
-  - **Convention rules:** all DOME launch files use better_launch. A DOME
-    package's launch files start only its own nodes (outside packages
-    allowed); anything combining DOME packages lives in dome2.
-  - **TF05.0 and TF05.1 done.** Verdicts are final in
-    `stack/launch_inventory.md`; rules in `stack/launch_conventions.md`.
-  - **TF05.2 in progress.** dome_control is done and verified on the robot.
-    dome_mission was skipped (blocked). dome_nav is done in code
-    (`robot.launch.py --mode slam`, no Nav2) but needs a robot run. Next is
-    dome_semantic.
-  - **TF05.6 test written early:** `test/test_launch_conventions.py`.
-    Unconverted files are strict xfails in `NOT_YET_CONVERTED`; remove each
-    entry as its repo is fixed.
-- **F06 (build out the sim on the VM) is approved (2026-11-17), not started.** The
-  `sim_*` files were never tested. See
-  `process/03-features/notdone/F06-simulation.md`. TF06.0 needs the VM.
-- **Stack-wide shutdown fix, pushed in all 7 repos.** 11 node `main()`s
-  printed an `ExternalShutdownException` traceback on stop. Each is fixed
-  and has a regression test. See `chores.md`.
-- **SLAM params need a fresh start.** `dome_nav`'s
-  `mapper_params_online_async.yaml` has three keys Kilted ignores, and
-  `slam_toolbox` sometimes doesn't activate. Both are added to `dome_nav`
-  I13 (pushed).
+- **dome_control: done and verified on the robot.** `spin_survey`'s params
+  moved to `config/spin_survey.yaml`. Two unused `mapper_params*` copies
+  were deleted (chore).
+- **dome_mission: skipped.** Its only file is blocked on I13 and F19.
+- **dome_nav: done in code, not yet run.** `robot_map.launch.py` became
+  `robot.launch.py --mode slam --map_name <name> [--sim_time]`, with no
+  Nav2.
+- **TF05.6:** `test/test_launch_conventions.py`. Unconverted files are
+  strict xfails in `NOT_YET_CONVERTED`; remove each entry as its repo is
+  fixed.
+- **slam_toolbox activation stall:** 4 of 31 starts failed. The evidence is
+  in `dome_nav` I13; the likely cause is a Fast DDS discovery race. A
+  check-and-activate helper was rejected as a kludge; no fix is chosen.
+- **The installed `robot_map.launch.py` is stale.** colcon doesn't delete
+  files that were removed from the source tree. The clean rebuild after the
+  upgrade clears it.
 
 ### Next
 
-1. **Run dome_viz's `test_main_shutdown.py` on the VM**, because the Pi has
+1. **Upgrade the Kilted apt packages on the Pi and the VM.** 303 are
+   pending, including Fast DDS 3.2.5 and foxglove_bridge 3.5.0. Save a
+   `dpkg -l 'ros-kilted-*'` snapshot first. Then clean-rebuild the
+   workspace, and re-test `d c`, `d f`, `d vi`, `d b` and dome_nav's
+   `robot.launch.py`, starting slam_toolbox several times.
+2. **Run dome_viz's `test_main_shutdown.py` on the VM**, because the Pi has
    no `aiohttp`. It is the last check of the shutdown fix. The dome_control
    nodes stop cleanly on the robot (2026-11-17).
-2. **F05, TF05.2**: bring each package's launch files to the convention
-   (`stack/launch_conventions.md`), one repo at a time. TF05.1 is settled;
-   verdicts are in `stack/launch_inventory.md`.
-3. **F06, TF06.0** on the VM. Approved, but don't start until the user says so.
-4. **Move the power load test here from `dome_semantic`.** Files:
+3. **F05, TF05.2**: carry on with dome_semantic (`semantic.launch.py` →
+   `robot.launch.py`), then dome_telemetry, dome_vision, dome_viz and
+   dome_voice. Remove each from `NOT_YET_CONVERTED` as it is done.
+4. **F06, TF06.0** on the VM. Approved, but don't start until the user says so.
+5. **Move the power load test here from `dome_semantic`.** Files:
    `tools/power_load_test.sh`, `tools/power_summary.awk`,
    `test/test_power_load_test.py`, `process/02-doc/power_testing.md`. See
    `dome_semantic`'s `current.md` for the references to update. It overlaps
    with F02.
-5. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
+6. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
    tracked in that package.
-6. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
+7. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
    TF02.0 and TF02.1 could start now. TF02.2 and TF02.3 should wait for F19.
    F05's launch commands should come first.
+
+### Decisions pending
+
+- **`dome_control`'s `control.yaml` is parked by the user.** It lives in
+  `~/.dome/config`, untracked, and `config set` rewrites it. The repo copy,
+  `config/control-config.yaml`, is used by nothing. The design options are
+  in this session's history entry.
 
 ### Caveats
 

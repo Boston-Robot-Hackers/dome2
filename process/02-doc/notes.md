@@ -35,6 +35,11 @@
 
 - **Stale colcon cache after a repo move:** a package that moved repos can leave `build/<pkg>` pointing at its old source folder (seen with `dome_telemetry_msgs`, moved out of `dome_vision`). Delete `build/<pkg>` and `install/<pkg>`, then rebuild.
 
+- **colcon keeps deleted or renamed files in `install/`.** After a launch
+  file is removed from source, `bl <pkg> <old name>` still runs the
+  installed copy. Delete it from `install/<pkg>/share/<pkg>/launch/`, or
+  rebuild clean.
+
 ## Sibling packages
 
 `dome_control`, `dome_voice`, `dome_vision`, `dome_nav` all live under `~/ros2_ws/src/`.

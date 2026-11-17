@@ -3,6 +3,23 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-17: F05 TF05.1 settled.
+  - **TF05.2:** dome_control is done and verified on the robot (`--options
+    "d c"`; `param get` showed the YAML values). dome_mission was skipped
+    (blocked). dome_nav's `robot_map.launch.py` became `robot.launch.py
+    --mode slam` with no Nav2.
+  - **TF05.6** convention test written early, with strict xfails for
+    unconverted files.
+  - **Header-stamping hook** installed in dome_control and dome_nav.
+  - **dome_control's unused `mapper_params*` copies** were deleted.
+  - **`control.yaml` was looked into, then parked.** Only `simple_cli`'s
+    `config set` rewrites it. The options were: seed it from the repo copy
+    if missing, or keep defaults in share with overrides in `~/.dome`
+    (dome_nav's `write_config` works this way). `launch_templates` should
+    move out either way.
+  - **slam_toolbox stall:** the evidence went to dome_nav I13. Starting it
+    with `bl.node(lifecycle_target=ACTIVE)` was ruled out, because
+    better_launch's transition `call()` has no timeout and would hang.
 - 2026-11-17: F05 TF05.0 done: `stack/launch_inventory.md`. Two-level launch
   rule decided and added to the spec. Sim declared untested; F06 (sim on the
   VM) drafted.

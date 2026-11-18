@@ -106,6 +106,30 @@ it. Record each result in the inventory.
 A file or option is kept only if it passes here or already has a pass on
 record.
 
+**Re-tests after the Kilted upgrade (2026-11-18):** one subsystem at a
+time, with the drivers up, and each stopped from the launch UI.
+
+- **`d c`: pass, clean stop.** All three nodes came up and `/telemetry`
+  published. Right after the launch, `ros2 node list` (through the daemon)
+  showed only `/telemetry`; `--no-daemon` listed all three.
+- **`d f`: pass, clean stop.** `foxglove_bridge` is now 3.5.0 and listens on
+  8765, and Foxglove on the Mac connected.
+  - The bridge logged `Failed to retrieve parameters from node '/ld19'`,
+    probably when the client asked for them. Topics were not affected.
+- **`d vi`: pass, but the stop floods the log.** The node reached `active`,
+  and `/telemetry/oak` showed 9.96 fps.
+  - Half a second after SIGTERM, depthai's USB read thread logged `F:
+    usbPlatformRead … Cannot find file descriptor by key: 55` 4,103 times.
+    Then the process exited, with no traceback.
+  - None of the 11-13 to 11-17 vision logs has these lines.
+  - The upgrade isn't the cause: the node loads pip depthai 2.32.0 from
+    `/usr/local`, which the upgrade didn't touch.
+- **`d b`: starts, but the data is untested.** `/battery_telemetry` came up
+  and stopped cleanly.
+  - The UPS I2C isn't connected yet, so the node logs `UPS telemetry
+    unavailable: [Errno 121]` and publishes nothing.
+  - Re-check `/telemetry/battery` once the UPS is connected.
+
 **Decisions settled with the user (2026-11-17):**
 
 1. **`view.launch.py` → `remote.launch.py`** in dome_viz. Update dome2's
@@ -171,6 +195,27 @@ TF05.6's test rules.
     `test_map_validation.py` were already there; they need a live stack.
 - **dome_mission: skipped.** Its only file, `mission_explore.launch.py`, is
   a known exception, blocked on I13 and F19.
+- **dome_semantic: done in code, not yet run on the robot (2026-11-17).**
+  - `semantic.launch.py` was renamed to `robot.launch.py`, with the same
+    arguments: `--map_name` (required), `--publish_every_n` and
+    `--static_map_odom`.
+  - `test_semantic_launch.py` became `test_robot_launch.py`. The header hook
+    was installed.
+  - References were updated in dome_semantic's config, tools, notes and
+    TF33, dome_vision's README, F70 and F71, and dome_viz's TF01.
+  - dome_semantic's pytest: 160 passed. `bl dome_semantic robot.launch.py
+    --help` parses and lists all three arguments.
+- **dome_telemetry: done in code, not yet run on the robot (2026-11-18).**
+  - `robot.launch.py` kept its name and its no-argument entry. It gained the
+    standard header with usage lines, a module docstring and an entry
+    docstring.
+  - The README was wrong: it said `gendrv.launch.py` starts the node. dome2
+    actually starts it as the `battery` subsystem (`d b`), so the README now
+    says that.
+  - dome_telemetry's pytest: 45 passed. `bl dome_telemetry robot.launch.py
+    --help` parses.
+  - **There is no header hook.** dome_telemetry has no `.githooks/`
+    directory.
 
 **Description**: Work one package at a time: dome_control, dome_mission,
 dome_nav, dome_semantic, dome_telemetry, dome_vision, dome_viz, dome_voice.

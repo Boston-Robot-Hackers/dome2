@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # test_launch_conventions — static checks of stack/launch_conventions.md
 # Author: Pito Salas and Claude Code
-# Version: 2
+# Version: 3
 # Created: 2026-11-17
-# Updated: 2026-11-17
+# Updated: 2026-11-18
 # Open Source Under MIT license
 """Check every DOME launch file against stack/launch_conventions.md.
 
@@ -70,8 +70,6 @@ NOT_YET_CONVERTED = {
     "dome_nav/just_explorer.launch.py",
     "dome_nav/nav2_experiment_navigation.launch.py",
     "dome_nav/nav_experiment.launch.py",
-    "dome_semantic/semantic.launch.py",
-    "dome_telemetry/robot.launch.py",
     "dome_vision/dome_vision_ros.launch.py",
     "dome_vision/remote.launch.py",
     "dome_vision/robot.launch.py",

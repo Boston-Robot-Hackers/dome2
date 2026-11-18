@@ -3,11 +3,46 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-18: F05 TF05.2, dome_telemetry, and dome_telemetry's move to j3.
+  - **dome_telemetry's `robot.launch.py`** got the standard header, usage
+    lines and docstrings, and left `NOT_YET_CONVERTED`.
+  - **Wrong "launched with gendrv" claims were fixed** in its README,
+    CLAUDE.md, spec and two literate docs. Since a017b05 the node has been
+    dome2's `battery` subsystem.
+  - **dome_telemetry now uses the j3 layout**: its docs are under `process/`,
+    its `.claude` is synced from j3, and it has the header hook.
+  - **j3 gained the feature `Date Created:` rule.** dome2's `process.md` was
+    re-synced.
+  - **dome_semantic's literate doc** `14-semantic_launch.md` became
+    `14-robot_launch.md`.
+  - The installed `robot_map.launch.py` is gone, cleared by the rebuild
+    after the upgrade.
+- 2026-11-18: Kilted apt upgrade and the shutdown fix's last check.
+  - **The Pi and the VM were upgraded** (2026-11-17). The Pi now has Fast
+    DDS 3.2.5 and foxglove_bridge 3.5.0. The pre-upgrade snapshot is
+    `~/kilted-before-2026-11-17.txt` on the Pi.
+  - **slam_toolbox activated in all 4 starts after the upgrade**, through
+    `bl dome_nav robot.launch.py --mode slam`. Before the upgrade, 4 of 31
+    had stalled. Four starts can't show a fix; details are in dome_nav I13.
+  - **The errors seen in one run came from shutdown**, not startup:
+    `slam_manager` tries a lifecycle transition while it is being shut down.
+  - **dome_viz's `test_main_shutdown.py` passed on the VM.** That was the last
+    check of the stack-wide clean-shutdown fix.
+  - **Subsystem re-tests after the upgrade:**
+    - `d c`, `d f` (bridge 3.5.0) and `d vi` passed.
+    - `d b` starts, but its data waits on the UPS I2C being connected.
+    - `d vi`'s stop floods the log with depthai USB read errors.
+    - Details are in TF05.1.
 - 2026-11-17: F05 TF05.1 settled.
   - **TF05.2:** dome_control is done and verified on the robot (`--options
     "d c"`; `param get` showed the YAML values). dome_mission was skipped
     (blocked). dome_nav's `robot_map.launch.py` became `robot.launch.py
     --mode slam` with no Nav2.
+  - **dome_semantic was converted late the same day.** `semantic.launch.py`
+    became `robot.launch.py` and ran on the robot with `--static_map_odom
+    true`.
+    - On that bench run, two cans at about 5 m became five targets. This is
+      logged in dome_vision I04 (a recurrence) and the new dome_semantic I01.
   - **TF05.6** convention test written early, with strict xfails for
     unconverted files.
   - **Header-stamping hook** installed in dome_control and dome_nav.

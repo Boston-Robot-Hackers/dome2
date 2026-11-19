@@ -3,6 +3,23 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-19: F05 TF05.2, dome_vision, plus robot tests.
+  - **dome_vision's `robot.launch.py`** took in `dome_vision_ros.launch.py`'s
+    arguments (`--config`, `--depth`, `--enable_embeddings`), dropped the
+    dead `perf`, kept `publish_raw` fixed off, and left `NOT_YET_CONVERTED`.
+  - **`--depth false` now works.** The node's `depth` parameter became an
+    `auto`/`true`/`false` string. Verified on the robot: `/oak/depth` is
+    gone with `false` and back by default.
+  - **`d b` re-check done** (user report). **dome_vision I06** was opened
+    for the depthai log flood on stop.
+  - **A UI stop aborted the vision node** in depthai (`std::terminate`).
+    The likely cause is that `on_deactivate` never runs on SIGTERM. Logged
+    as an open dome_vision chore.
+  - **After the user rewired the power, `nn_threads` went back to 2**, with
+    EXT5V at 5.19 V (was 4.974 V) and no undervoltage. Recorded in dome_vision
+    I02.
+  - **dome_viz chore:** "Robot not connected" showed while the camera image
+    was arriving, which contradicts `view_state`'s `any(...)` rule.
 - 2026-11-18: F05 TF05.2, dome_telemetry, and dome_telemetry's move to j3.
   - **dome_telemetry's `robot.launch.py`** got the standard header, usage
     lines and docstrings, and left `NOT_YET_CONVERTED`.

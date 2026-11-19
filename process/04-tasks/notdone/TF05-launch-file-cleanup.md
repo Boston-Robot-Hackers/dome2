@@ -216,6 +216,20 @@ TF05.6's test rules.
     --help` parses.
   - **There is no header hook.** dome_telemetry has no `.githooks/`
     directory.
+- **dome_vision: done in code, not yet run on the robot (2026-11-19).**
+  - `robot.launch.py` took in `dome_vision_ros.launch.py`'s arguments:
+    `--config` (empty falls back to `$DOME_VISION_CONFIG`), `--depth`
+    (default `true`) and `--enable_embeddings` (default `auto`). `perf` was
+    dropped, since the node no longer declares it. `publish_raw` stays
+    fixed at `False` (user's call).
+  - **Fixed `--depth false` doing nothing.** The node's `depth` parameter
+    is now an `auto`/`true`/`false` string, like `enable_embeddings`, with
+    a regression test. Logged as a dome_vision chore.
+  - `dome_vision_ros.launch.py` got the same `depth` type so it keeps
+    working until TF05.3 deletes it. The README and dome_semantic
+    references also wait for TF05.3.
+  - dome_vision's pytest: 94 passed. `bl dome_vision_ros robot.launch.py
+    --help` parses. TF05.6: 54 passed, 9 skipped, 17 xfailed.
 
 **Description**: Work one package at a time: dome_control, dome_mission,
 dome_nav, dome_semantic, dome_telemetry, dome_vision, dome_viz, dome_voice.

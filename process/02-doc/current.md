@@ -2,40 +2,39 @@
 
 ## Open
 
-### Pick up here (2026-11-18)
+### Pick up here (2026-11-19)
 
-**Checkpointed across seven repos:** dome2, dome_telemetry, dome_nav,
-dome_semantic, dome_vision, dome_viz and j3. Details are in `history.md`
-and TF05.
+**Checkpointed across three repos:** dome2, dome_vision and dome_viz.
+Details are in `history.md` and TF05.
 
-- **Kilted upgrade verified.** slam_toolbox activated in 4 of 4 starts, and
-  `d c`, `d f` and `d vi` pass. `d b` waits on the UPS I2C.
-- **TF05.2:** dome_telemetry is converted. Next are dome_vision, dome_viz
-  and dome_voice.
-- **dome_telemetry now uses the j3 layout**: its docs are under `process/`,
-  its `.claude` is synced from j3, and it has the header hook.
-- **The `d vi` stop floods the log** with depthai USB read errors. Whether
-  that gets a dome_vision issue is still undecided.
+- **TF05.2:** dome_vision is converted and its `--depth` fix verified on the
+  robot. Next are dome_viz and dome_voice.
+- **The vision node aborts on a UI stop** (`std::terminate` in depthai).
+  The fix is an open dome_vision chore, `release_device()` called from
+  `main()`, and is not started. Its robot re-test may also close I06.
+- **`nn_threads` is back to 2** after the user rewired the power. I02
+  stays open until a full-stack run with drive shows no brownouts.
 
 ### Next
 
-1. **Re-check `d b`'s `/telemetry/battery` once the UPS I2C is connected.**
-   The other re-tests after the upgrade passed (2026-11-18, see TF05.1).
-   - Decide whether `d vi`'s flood of depthai USB read errors on stop needs
-     its own dome_vision issue.
-2. **F05, TF05.2**: dome_control, dome_nav, dome_semantic and dome_telemetry
-   are done, and dome_mission was skipped. Carry on with dome_vision,
-   dome_viz and dome_voice. Remove each from `NOT_YET_CONVERTED` (TF05.6's
+1. **F05, TF05.2**: dome_control, dome_nav, dome_semantic and dome_telemetry
+   are done, dome_vision is done in code (2026-11-19), and dome_mission
+   was skipped. Carry on with dome_viz and dome_voice. Remove each from `NOT_YET_CONVERTED` (TF05.6's
    strict xfails) as it is done. Progress is in TF05.
-3. **F06, TF06.0** on the VM. Approved, but don't start until the user says so.
-4. **Move the power load test here from `dome_semantic`.** Files:
+2. **dome_vision's shutdown-abort chore**, then re-test a UI stop for the
+   abort and I06's flood.
+3. **I02: a full-stack run with drive** on 2 NN threads, watching
+   `journalctl -kf | grep -i voltage`.
+4. **dome_viz chore:** "Robot not connected" while the camera streams.
+5. **F06, TF06.0** on the VM. Approved, but don't start until the user says so.
+6. **Move the power load test here from `dome_semantic`.** Files:
    `tools/power_load_test.sh`, `tools/power_summary.awk`,
    `test/test_power_load_test.py`, `process/02-doc/power_testing.md`. See
    `dome_semantic`'s `current.md` for the references to update. It overlaps
    with F02.
-5. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
+7. Land `dome_control`'s F19 (dome_mission `/intent` integration). It is
    tracked in that package.
-6. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
+8. Resume F02 (`process/03-features/notdone/F02-full-stack-smoke-test.md`).
    TF02.0 and TF02.1 could start now. TF02.2 and TF02.3 should wait for F19.
    F05's launch commands should come first.
 

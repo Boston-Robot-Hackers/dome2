@@ -4,11 +4,13 @@
 
 ### Pick up here (2026-11-19)
 
-**Checkpointed across three repos:** dome2, dome_vision and dome_viz.
+**Checkpointed across three repos:** dome2, dome_vision and dome_viz (twice).
 Details are in `history.md` and TF05.
 
-- **TF05.2:** dome_vision is converted and its `--depth` fix verified on the
-  robot. Next are dome_viz and dome_voice.
+- **TF05.2:** dome_vision is converted, and its `--depth` fix was verified
+  on the robot. dome_viz's `view.launch.py` is now `remote.launch.py`. Its
+  full suite and a launch still need the VM; the commands are in TF05.
+  dome_voice is last.
 - **The vision node aborts on a UI stop** (`std::terminate` in depthai).
   The fix is an open dome_vision chore, `release_device()` called from
   `main()`, and is not started. Its robot re-test may also close I06.
@@ -18,8 +20,9 @@ Details are in `history.md` and TF05.
 ### Next
 
 1. **F05, TF05.2**: dome_control, dome_nav, dome_semantic and dome_telemetry
-   are done, dome_vision is done in code (2026-11-19), and dome_mission
-   was skipped. Carry on with dome_viz and dome_voice. Remove each from `NOT_YET_CONVERTED` (TF05.6's
+   are done, dome_vision and dome_viz are done in code (2026-11-19), and
+   dome_mission was skipped. Carry on with dome_voice. dome_viz still needs
+   its full suite and a launch on the VM. Remove each from `NOT_YET_CONVERTED` (TF05.6's
    strict xfails) as it is done. Progress is in TF05.
 2. **dome_vision's shutdown-abort chore**, then re-test a UI stop for the
    abort and I06's flood.

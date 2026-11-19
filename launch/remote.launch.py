@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # remote.launch.py — dome2 launcher for the remote computer's side of the stack
 # Author: Pito Salas and Claude Code
-# Version: 1
+# Version: 2
 # Created: 2026-11-16
-# Updated: 2026-11-16
+# Updated: 2026-11-19
 # Open Source Under MIT license
 #
 # Examples:
@@ -24,7 +24,7 @@ from dome2.subsystem_launcher import launch_subsystems
 
 # Ordered: this order is the interactive prompt order and the include order.
 LAUNCH_FILES = {
-    "viz": ("dome_viz", "view.launch.py"),
+    "viz": ("dome_viz", "remote.launch.py"),
 }
 
 SUBSYSTEMS = list(LAUNCH_FILES)

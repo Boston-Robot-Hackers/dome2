@@ -3,6 +3,13 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-19: F05 TF05.2, dome_viz.
+  - **`view.launch.py` became `remote.launch.py`**, with entry function
+    `remote_launch` (TF05.1 decision 1). Updated: dome_viz's Makefile, test,
+    notes and literate X02; dome2's `remote.launch.py`, its profile test,
+    TF06 and literate 04. It left `NOT_YET_CONVERTED`.
+  - Verified on the Pi only: `test_launch.py` and `--help`. The rest of the
+    suite needs `aiohttp`, which only the VM has.
 - 2026-11-19: F05 TF05.2, dome_vision, plus robot tests.
   - **dome_vision's `robot.launch.py`** took in `dome_vision_ros.launch.py`'s
     arguments (`--config`, `--depth`, `--enable_embeddings`), dropped the

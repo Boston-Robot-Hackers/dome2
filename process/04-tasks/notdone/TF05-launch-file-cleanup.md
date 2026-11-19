@@ -230,6 +230,18 @@ TF05.6's test rules.
     references also wait for TF05.3.
   - dome_vision's pytest: 94 passed. `bl dome_vision_ros robot.launch.py
     --help` parses. TF05.6: 54 passed, 9 skipped, 17 xfailed.
+- **dome_viz: done in code, not yet run on the VM (2026-11-19).**
+  - `view.launch.py` was renamed to `remote.launch.py` (decision 1), with
+    entry function `remote_launch` and usage lines in the header. Arguments
+    are unchanged: `--sim_time`, `--host`, `--port`.
+  - Updated: the Makefile (`view`, `replay`, and `stop`'s pkill pattern),
+    `test_launch.py`, notes.md, dome2's `remote.launch.py` `LAUNCH_FILES`,
+    `test_launch_profiles.py` and TF06.
+  - `test_launch.py`: 8 passed on the Pi. **The full dome_viz suite needs
+    the VM**, because the Pi has no `aiohttp`. `bl dome_viz remote.launch.py
+    --help` parses. TF05.6: 112 passed in dome2's suite, 16 xfailed.
+  - **The VM's install tree still has `view.launch.py`** after a rebuild.
+    colcon doesn't delete renamed files. It was removed by hand on the Pi.
 
 **Description**: Work one package at a time: dome_control, dome_mission,
 dome_nav, dome_semantic, dome_telemetry, dome_vision, dome_viz, dome_voice.

@@ -1,6 +1,6 @@
 ---
-version: "1.4"
-generated: "2026-11-16"
+version: "1.5"
+generated: "2026-11-19"
 ---
 
 # The Orchestrators: robot.launch.py and remote.launch.py
@@ -53,7 +53,7 @@ SUBSYSTEMS = list(LAUNCH_FILES)
 
 ```python
 LAUNCH_FILES = {
-    "viz": ("dome_viz", "view.launch.py"),
+    "viz": ("dome_viz", "remote.launch.py"),
 }
 ```
 
@@ -62,7 +62,7 @@ LAUNCH_FILES = {
 A few entries point **straight at other packages' launch files** instead of a thin `dome2` wrapper (chapter 3):
 
 - **`battery`** and **`yellow`** on the robot, so each can be toggled on its own. `--options "d b"` gives drivers plus battery telemetry.
-- **`viz`** on the remote, which uses `dome_viz`'s own `view.launch.py` unchanged.
+- **`viz`** on the remote, which uses `dome_viz`'s own `remote.launch.py` unchanged.
 
 Nav/SLAM is not in either table. It is launched separately, per mode, from `dome_nav`, because it doesn't fit the on-or-off model.
 
@@ -184,6 +184,6 @@ for name, is_enabled in cfg.items():
 ## Observations
 
 - **Profile indirection is still the least obvious part.** `DOME_PROFILE` naming another variable trips people up. The exit message with its `export` hint now explains it at the moment it matters, rather than only in the launch files' header examples.
-- **Two dependencies sit outside the shared code's control.** `remote.launch.py`'s only entry relies on `dome_viz`'s `view.launch.py` keeping its name, and nothing checks that until launch time. A test that looks up each `LAUNCH_FILES` entry in the installed package index would catch a rename early.
+- **Entries depend on other packages' file names.** `remote.launch.py`'s only entry relies on `dome_viz`'s `remote.launch.py` (renamed from `view.launch.py` on 2026-11-19). `test_launch_conventions.py` now checks that every `LAUNCH_FILES` target exists in the source tree, but only for packages checked out next to dome2.
 - **`package.xml` serves both computers.** It exec-depends on robot-only packages (`yellow_pad`, `dome_telemetry`), so `rosdep install` on the remote computer will complain even though nothing there needs them.
 - **`logging` uses the root logger** (ruff's LOG015 is waived in `ruff.toml`) because pytest's `caplog` here didn't reliably capture named loggers. A module logger would be cleaner if that is revisited.

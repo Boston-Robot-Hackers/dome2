@@ -107,7 +107,7 @@ if F05 hasn't.
 
 **Test**:
 
-- **Static:** a test that `sim_time` reaches `view.launch.py`'s arguments.
+- **Static:** a test that `sim_time` reaches dome_viz `remote.launch.py`'s arguments.
 - **Manual:** the page shows the sim map and robot.
 
 ## TF06.7 — Retire or fold `dome_nav`'s old sim launch files

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # test_launch_profiles.py — tests for the launchers' profile and token logic
 # Author: Pito Salas and Claude Code
-# Version: 4
+# Version: 5
 # Created: 2026-11-16
-# Updated: 2026-11-17
+# Updated: 2026-11-19
 # Open Source Under MIT license
 
 import ast
@@ -123,7 +123,7 @@ class TestLaunchSubsystemsWithoutProfile:
         # sys.exit would end only the UI's worker thread, so the launcher
         # shuts the BetterLaunch instance down, which makes the UI quit.
         subsystem_launcher, bl_class = launcher
-        launch_files = {"viz": ("dome_viz", "view.launch.py")}
+        launch_files = {"viz": ("dome_viz", "remote.launch.py")}
         subsystem_launcher.launch_subsystems("remote", "", is_interactive, launch_files)
         bl_instance = bl_class.return_value
         bl_instance.shutdown.assert_called_once()
@@ -131,7 +131,7 @@ class TestLaunchSubsystemsWithoutProfile:
 
     def test_logs_the_available_subsystems(self, launcher, caplog):
         subsystem_launcher, _ = launcher
-        launch_files = {"viz": ("dome_viz", "view.launch.py")}
+        launch_files = {"viz": ("dome_viz", "remote.launch.py")}
         with caplog.at_level(logging.ERROR):
             subsystem_launcher.launch_subsystems("remote", "", False, launch_files)
         assert "viz" in caplog.text
@@ -148,7 +148,7 @@ class TestRobotLaunch:
 class TestRemoteLaunch:
     def test_viz_is_the_only_subsystem(self, remote_launch):
         assert remote_launch.SUBSYSTEMS == ["viz"]
-        assert remote_launch.LAUNCH_FILES["viz"] == ("dome_viz", "view.launch.py")
+        assert remote_launch.LAUNCH_FILES["viz"] == ("dome_viz", "remote.launch.py")
 
     def test_v_resolves_to_viz(self, remote_launch):
         assert resolve_tokens("v", remote_launch.SUBSYSTEMS) == ["viz"]

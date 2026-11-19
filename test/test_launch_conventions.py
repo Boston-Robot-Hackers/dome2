@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # test_launch_conventions — static checks of stack/launch_conventions.md
 # Author: Pito Salas and Claude Code
-# Version: 4
+# Version: 5
 # Created: 2026-11-17
 # Updated: 2026-11-19
 # Open Source Under MIT license
@@ -72,7 +72,6 @@ NOT_YET_CONVERTED = {
     "dome_nav/nav_experiment.launch.py",
     "dome_vision/dome_vision_ros.launch.py",
     "dome_vision/remote.launch.py",
-    "dome_viz/view.launch.py",
     "dome_voice/remote.launch.py",
     "dome_voice/robot.launch.py",
     "inventory",

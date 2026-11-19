@@ -3,6 +3,14 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-19: F05 TF05.4 and F08.
+  - **TF05.4:** `gendrv.launch.py` → `drivers.launch.py`; new `slam` (`sl`)
+    and `semantic` (`se`) subsystems; `--sim_time` and `--map_name` reach the
+    subsystems through better_launch's own argument passing, with two new
+    convention tests. All three dome2 launchers now meet the convention, so
+    `NOT_YET_CONVERTED` is empty. Not yet run on the robot.
+  - **F08:** `make status-repos` prints `CLEAN`/`DIRTY` per registered repo.
+    `commit-push-repos` was built and dropped at the user's request.
 - 2026-11-19: F05 TF05.3 deletions, F07 config convention, dome_voice F02.
   - **TF05.3:** deleted the four dome2 wrappers (`LAUNCH_FILES` now names
     each package's file directly), `remote.launch.py` in dome_control,

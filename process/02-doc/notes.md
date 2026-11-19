@@ -13,6 +13,7 @@ Always `colcon build --symlink-install`. Then installed `config/` files are syml
 
 - Without it, the installed copy goes stale. `roboflow_oak.yaml` kept `nn_threads: 1` for an hour after the source said 2.
 - A package first built with copies needs its `build/<pkg>` and `install/<pkg>` removed before a symlink build. colcon won't swap copies for links. On the Pi, `dome2`, `dome_control`, `dome_nav`, `dome_vision_ros` and `dome_voice` have been switched (2026-11-19); the rest are still copies.
+- **Renaming or deleting an installed file breaks the next symlink build.** `build/<pkg>` keeps a link to the old name, and colcon fails with `can't copy ... doesn't exist`. Remove `build/<pkg>` and `install/<pkg>` and rebuild (hit with `gendrv` → `drivers`, 2026-11-19).
 
 ## Runtime gotchas (found 2026-11-17)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # test_launch_profiles.py — tests for the launchers' profile and token logic
 # Author: Pito Salas and Claude Code
-# Version: 5
+# Version: 6
 # Created: 2026-11-16
 # Updated: 2026-11-19
 # Open Source Under MIT license
@@ -25,8 +25,10 @@ LAUNCH_DIR = Path(__file__).parent.parent / "launch"
 
 ROBOT_SUBSYSTEMS = [
     "drivers",
+    "slam",
     "control",
     "vision",
+    "semantic",
     "voice",
     "foxglove",
     "battery",
@@ -142,7 +144,7 @@ class TestRobotLaunch:
         assert robot_launch.SUBSYSTEMS == ROBOT_SUBSYSTEMS
 
     def test_every_token_prefix_resolves(self, robot_launch):
-        assert robot_tokens("d c vi vo f b y") == robot_launch.SUBSYSTEMS
+        assert robot_tokens("d sl c vi se vo f b y") == robot_launch.SUBSYSTEMS
 
 
 class TestRemoteLaunch:
@@ -159,7 +161,7 @@ class TestRemoteLaunch:
         assert caplog.records
 
 
-LAUNCHERS = [("robot.launch.py", "start_nav"), ("remote.launch.py", "start_remote")]
+LAUNCHERS = [("robot.launch.py", "robot_launch"), ("remote.launch.py", "remote_launch")]
 
 
 @pytest.mark.parametrize(("file_name", "func_name"), LAUNCHERS)

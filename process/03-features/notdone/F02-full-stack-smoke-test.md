@@ -21,7 +21,7 @@ pure/testable in isolation; the orchestration loop itself is runtime-only.
 
 | # | stage | brings up | how (existing launch files) |
 |---|---|---|---|
-| 1 | drivers | ESP32 base, IMU, lidar, EKF odom | `dome2 gendrv.launch.py` |
+| 1 | drivers | ESP32 base, IMU, lidar, EKF odom | `dome2 drivers.launch.py` |
 | 2 | control | `behavior_manager`, `telemetry_node`, `spin_survey_node` | `dome2 dome_control.launch.py` |
 | 3 | nav | `slam_toolbox`, Nav2, `slam_manager_node`, `explorer_manager_node` | `dome_nav robot_map.launch.py` or `robot_explore.launch.py` (operator picks mapping vs. explore) |
 | 4 | mission | `mission_node` (`/intent` front end, `ExploreArea` client) | `ros2 run dome_mission mission_node` |

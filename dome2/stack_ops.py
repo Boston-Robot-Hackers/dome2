@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # stack_ops — operations across every DOME package in the stack registry
 # Author: Pito Salas and Claude Code
-# Version: 1
+# Version: 2
 # Created: 2026-11-16
-# Updated: 2026-11-16
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """Command-line tool for operations that span the DOME stack.
 
@@ -11,14 +11,19 @@ Run from the dome2 checkout, normally through the Makefile:
 
     python3 -m dome2.stack_ops clone --registry stack/packages.yaml --src ..
     python3 -m dome2.stack_ops pull --registry stack/packages.yaml --src ..
+    python3 -m dome2.stack_ops status --registry stack/packages.yaml --src ..
 
-Both act on every registered package, whatever its `runs_on`, as a peer of
+All act on every registered package, whatever its `runs_on`, as a peer of
 dome2 under `--src` (the workspace `src/` directory).
 
 - `clone` runs `git clone <repo> <src>/<name>` for each package whose path
   doesn't exist yet. An existing path is left alone, whatever is in it.
 - `pull` runs `git pull --ff-only` in each package. A missing package is a
   failure that points to `clone`; `pull` never clones by itself.
+- `status` runs `git fetch`, then prints `CLEAN  <name>` or `DIRTY  <name>`
+  per repo. DIRTY means uncommitted files, commits to push or commits to
+  pull. A repo with no upstream branch, a failed fetch or a missing checkout
+  prints `FAIL   <name>: <why>`.
 
 One failure does not stop the others. The summary lists every failure and
 the exit status is 1 if there was any.
@@ -53,10 +58,36 @@ def run_git(name: str, git_args: list[str]) -> PackageResult:
     return PackageResult(name, is_ok, detail)
 
 
+def git(package_dir: Path, *git_args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", "-C", str(package_dir), *git_args],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def missing_result(package: StackPackage) -> PackageResult:
+    return PackageResult(package.name, False, "not checked out; run: make clone")
+
+
+def uncommitted_count(package_dir: Path) -> int:
+    return len(git(package_dir, "status", "--porcelain").stdout.splitlines())
+
+
+def behind_ahead(package_dir: Path) -> tuple[int, int] | None:
+    """Commits to pull and to push against the upstream; None if there is none."""
+    completed = git(package_dir, "rev-list", "--left-right", "--count", "@{u}...HEAD")
+    if completed.returncode != 0:
+        return None
+    behind, ahead = completed.stdout.split()
+    return int(behind), int(ahead)
+
+
 def pull_package(package: StackPackage, src_dir: Path) -> PackageResult:
     package_dir = src_dir / package.name
     if not package_dir.is_dir():
-        return PackageResult(package.name, False, "not checked out; run: make clone")
+        return missing_result(package)
     return run_git(package.name, ["-C", str(package_dir), "pull", "--ff-only"])
 
 
@@ -67,9 +98,36 @@ def clone_package(package: StackPackage, src_dir: Path) -> PackageResult:
     return run_git(package.name, ["clone", package.repo, str(package_dir)])
 
 
+CLEAN_DETAIL = "clean"
+
+
+def status_package(package: StackPackage, src_dir: Path) -> PackageResult:
+    package_dir = src_dir / package.name
+    if not package_dir.is_dir():
+        return missing_result(package)
+    fetched = run_git(package.name, ["-C", str(package_dir), "fetch", "--quiet"])
+    if not fetched.is_ok:
+        return PackageResult(package.name, False, f"fetch failed: {fetched.detail}")
+    counts = behind_ahead(package_dir)
+    if counts is None:
+        return PackageResult(package.name, False, "no upstream branch")
+    behind, ahead = counts
+    parts = [
+        f"{count} {label}"
+        for count, label in (
+            (uncommitted_count(package_dir), "uncommitted"),
+            (ahead, "to push"),
+            (behind, "to pull"),
+        )
+        if count
+    ]
+    return PackageResult(package.name, True, ", ".join(parts) or CLEAN_DETAIL)
+
+
 OPERATIONS: dict[str, Callable[[StackPackage, Path], PackageResult]] = {
     "clone": clone_package,
     "pull": pull_package,
+    "status": status_package,
 }
 
 
@@ -89,12 +147,28 @@ def summary_lines(results: list[PackageResult], operation: str) -> list[str]:
     return lines
 
 
+def status_lines(results: list[PackageResult]) -> list[str]:
+    """`CLEAN  name` or `DIRTY  name` per repo; a failure is `FAIL   name: why`."""
+    lines = []
+    for result in results:
+        if not result.is_ok:
+            lines.append(f"FAIL   {result.name}: {result.detail}")
+        else:
+            label = "CLEAN" if result.detail == CLEAN_DETAIL else "DIRTY"
+            lines.append(f"{label}  {result.name}")
+    return lines
+
+
 def run_operation(operation: str, registry_path: Path, src_dir: Path) -> int:
-    packages = load_registry(registry_path)
-    print(f"{operation}: {len(packages)} packages in {src_dir}")
     package_op = OPERATIONS[operation]
+    packages = load_registry(registry_path)
+    if operation != "status":
+        print(f"{operation}: {len(packages)} packages in {src_dir}")
     results = [package_op(package, src_dir) for package in packages]
-    print("\n".join(summary_lines(results, operation)))
+    if operation == "status":
+        print("\n".join(status_lines(results)))
+    else:
+        print("\n".join(summary_lines(results, operation)))
     return 0 if all(result.is_ok for result in results) else 1
 
 

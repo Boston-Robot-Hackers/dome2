@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# test_stack_ops.py — tests for the cross-package clone and pull tool, git mocked
+# test_stack_ops.py — tests for the cross-package stack tool, git mocked
 # Author: Pito Salas and Claude Code
-# Version: 1
+# Version: 2
 # Created: 2026-11-16
-# Updated: 2026-11-16
+# Updated: 2026-11-19
 # Open Source Under MIT license
 
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -17,6 +18,8 @@ from dome2.stack_ops import (
     main,
     pull_package,
     run_operation,
+    status_lines,
+    status_package,
     summary_lines,
 )
 from dome2.stack_registry import StackPackage
@@ -167,3 +170,109 @@ class TestMain:
         registry_path, src_dir = workspace
         with pytest.raises(SystemExit):
             main(["build", "--registry", str(registry_path), "--src", str(src_dir)])
+
+
+@pytest.fixture
+def scripted_git(monkeypatch):
+    """Answer git by subcommand; `answers[(repo, subcommand)]` overrides a default.
+
+    A default repo is clean and in step with its upstream. Each answer is
+    (returncode, stdout). Calls are recorded as (repo, git args after -C dir).
+    """
+    defaults = {"status": (0, ""), "rev-list": (0, "0\t0\n")}
+    state = {"answers": {}, "calls": []}
+
+    def fake_run(cmd, **kwargs):
+        repo = Path(cmd[2]).name
+        git_args = cmd[3:]
+        state["calls"].append((repo, git_args))
+        subcommand = git_args[0]
+        answer = state["answers"].get((repo, subcommand))
+        returncode, stdout = answer or defaults.get(subcommand, (0, ""))
+        return subprocess.CompletedProcess(cmd, returncode, stdout, "")
+
+    monkeypatch.setattr(stack_ops.subprocess, "run", fake_run)
+    return state
+
+
+def subcommands(state, repo="dome_a"):
+    return [args[0] for name, args in state["calls"] if name == repo]
+
+
+class TestStatusPackage:
+    @pytest.fixture
+    def repo_dir(self, tmp_path):
+        (tmp_path / "dome_a").mkdir()
+        return tmp_path
+
+    def test_clean_repo(self, repo_dir, scripted_git):
+        result = status_package(PACKAGE_A, repo_dir)
+        assert result.is_ok
+        assert result.detail == "clean"
+        assert subcommands(scripted_git)[0] == "fetch"
+
+    def test_counts_uncommitted_push_and_pull(self, repo_dir, scripted_git):
+        scripted_git["answers"][("dome_a", "status")] = (0, " M a\n?? b\n")
+        scripted_git["answers"][("dome_a", "rev-list")] = (0, "3\t1\n")
+        result = status_package(PACKAGE_A, repo_dir)
+        assert result.is_ok
+        for expected in ("2 uncommitted", "1 to push", "3 to pull"):
+            assert expected in result.detail
+
+    def test_no_upstream_fails(self, repo_dir, scripted_git):
+        scripted_git["answers"][("dome_a", "rev-list")] = (128, "")
+        assert not status_package(PACKAGE_A, repo_dir).is_ok
+
+    def test_fetch_failure_fails(self, repo_dir, scripted_git):
+        scripted_git["answers"][("dome_a", "fetch")] = (1, "")
+        assert not status_package(PACKAGE_A, repo_dir).is_ok
+        assert subcommands(scripted_git) == ["fetch"]
+
+    def test_missing_package_points_to_clone(self, tmp_path, scripted_git):
+        result = status_package(PACKAGE_A, tmp_path)
+        assert not result.is_ok
+        assert "make clone" in result.detail
+        assert scripted_git["calls"] == []
+
+
+class TestStatusLines:
+    def test_one_line_per_repo_labelled_clean_dirty_or_fail(self):
+        results = [
+            PackageResult("dome_a", True, stack_ops.CLEAN_DETAIL),
+            PackageResult("dome_b", True, "1 to push"),
+            PackageResult("dome_c", False, "no upstream branch"),
+        ]
+        lines = status_lines(results)
+        assert [line.split()[:2] for line in lines] == [
+            ["CLEAN", "dome_a"],
+            ["DIRTY", "dome_b"],
+            ["FAIL", "dome_c:"],
+        ]
+
+    def test_status_prints_only_the_repo_lines(self, workspace, scripted_git, capsys):
+        registry_path, src_dir = workspace
+        (src_dir / "dome_c").mkdir()
+        scripted_git["answers"][("dome_b", "status")] = (0, " M a\n")
+        assert run_operation("status", registry_path, src_dir) == 0
+        assert capsys.readouterr().out.splitlines() == [
+            "CLEAN  dome_a",
+            "DIRTY  dome_b",
+            "CLEAN  dome_c",
+        ]
+
+    def test_failure_sets_exit_status(self, workspace, scripted_git):
+        registry_path, src_dir = workspace
+        assert run_operation("status", registry_path, src_dir) == 1
+
+
+class TestMakefile:
+    MAKEFILE = Path(__file__).parent.parent / "Makefile"
+
+    def test_help_lists_status_repos(self):
+        completed = subprocess.run(
+            ["make", "-f", str(self.MAKEFILE), "help"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        assert "status-repos" in completed.stdout

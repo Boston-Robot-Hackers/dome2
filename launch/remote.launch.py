@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # remote.launch.py — dome2 launcher for the remote computer's side of the stack
 # Author: Pito Salas and Claude Code
-# Version: 2
+# Version: 3
 # Created: 2026-11-16
 # Updated: 2026-11-19
 # Open Source Under MIT license
@@ -9,11 +9,14 @@
 # Examples:
 #   bl dome2 remote.launch.py                        # use $DOME_REMOTE_PROFILE env var
 #   bl dome2 remote.launch.py --options "v"          # dome_viz map view
+#   bl dome2 remote.launch.py --options "v" --sim_time True  # bag replay or simulator
 #   bl dome2 remote.launch.py --is_interactive       # confirm each subsystem
 """Remote-computer counterpart of `robot.launch.py`, with the same interface.
 
 Subsystems that run off the robot are listed here. It starts with only
-dome_viz; functions moved off the robot get an entry here.
+dome_viz; functions moved off the robot get an entry here. `sim_time` isn't
+used here: better_launch passes it to every included file that declares it
+(`dome_viz`).
 """
 
 import os
@@ -33,10 +36,11 @@ DEFAULT_PROFILE = os.environ.get("DOME_REMOTE_PROFILE", "remote")
 
 
 @launch_this(ui=True)
-def start_remote(
+def remote_launch(
     profile: str = "",
     options: str = "",
     is_interactive: bool = False,
+    sim_time: bool = False,
 ):
     """Launch remote-side subsystems by profile, token string, or interactively.
 
@@ -51,6 +55,8 @@ def start_remote(
         Space-separated subsystem token prefixes. Overrides profile.
     is_interactive : bool
         Prompt yes/no for each subsystem before launching.
+    sim_time : bool
+        Passed to the included files that take it (viz).
     """
     # Literal "" default: bl parses the signature statically and can't evaluate names.
     launch_subsystems(profile or DEFAULT_PROFILE, options, is_interactive, LAUNCH_FILES)

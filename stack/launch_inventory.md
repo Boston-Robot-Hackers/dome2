@@ -28,7 +28,7 @@ There are **30 files** in 9 packages. The 3 `*_msgs` packages have none.
 |---|---|---|---|---|---|
 | `robot.launch.py` | Top level: includes the chosen subsystems | `profile`, `options`, `is_interactive` | 2026-11-16 | **Pass**: E1, E2a, E2c, E2d, `d b` in many runs | **keep** |
 | `remote.launch.py` | Top level: includes `dome_viz` | same | 2026-11-16 | **Pass**: F03, F04 on the VM | **keep** |
-| `gendrv.launch.py` | `linorobot2_bringup` with dome2's URDF and EKF | none | 2026-11-05 | **Pass**: every run (`d`) | **rename** to `drivers.launch.py` (decided 2026-11-17). dome2 owns the drivers. |
+| `gendrv.launch.py` | `linorobot2_bringup` with dome2's URDF and EKF | none | 2026-11-05 | **Pass**: every run (`d`) | **rename** to `drivers.launch.py` (decided 2026-11-17; done 2026-11-19, TF05.4). dome2 owns the drivers. |
 | `dome_control.launch.py` | Wrapper: picks `dome_control`'s robot or remote file from `$DOME_MODE` | none | 2026-08-05 | Pass via E2a | **delete**. `LAUNCH_FILES` points at `dome_control` directly. Removes the hidden `$DOME_MODE` switch. |
 | `dome_vision.launch.py` | Wrapper for `dome_vision_ros`'s `robot.launch.py` | none | 2026-08-05 | Pass via E1 | **delete**. Point `LAUNCH_FILES` directly. |
 | `dome_voice.launch.py` | Wrapper for `dome_voice`'s `robot.launch.py` | none | 2026-08-05 | Fail via E2b | **delete**. Point `LAUNCH_FILES` directly. |

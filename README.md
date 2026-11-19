@@ -23,19 +23,31 @@ dome2 owns only the top-level launchers and the driver bringup. Every other subs
 |---|---|
 | `robot.launch.py` | The robot: chosen subsystems in one command |
 | `remote.launch.py` | The remote computer: the `viz` subsystem (dome_viz) |
-| `gendrv.launch.py` | Base driver + EKF + URDF state publisher (the `drivers` subsystem) |
+| `drivers.launch.py` | Base driver + EKF + URDF state publisher (the `drivers` subsystem) |
 
 `robot.launch.py`'s subsystems, chosen with `--options` (any unambiguous prefix):
 
 | Subsystem | Launches |
 |---|---|
-| `drivers` | `dome2 gendrv.launch.py` |
+| `drivers` | `dome2 drivers.launch.py` |
+| `slam` | `dome_nav robot.launch.py` (SLAM mapping; needs `--map_name`) |
 | `control` | `dome_control robot.launch.py` |
 | `vision` | `dome_vision_ros robot.launch.py` |
+| `semantic` | `dome_semantic robot.launch.py` (needs `--map_name`) |
 | `voice` | `dome_voice robot.launch.py` |
 | `foxglove` | `foxglove_bridge foxglove_bridge_launch.xml` (port 8765) |
 | `battery` | `dome_telemetry robot.launch.py` |
 | `yellow` | `yellow_pad yellow_pad.launch.py` |
+
+`slam` and `semantic` both start with `s`, so use `sl` and `se`.
+
+**Arguments for the subsystems.** `--map_name` and `--sim_time` are passed on to every included file that declares the same name, so one command runs a semantic-mapping session:
+
+```bash
+bl dome2 robot.launch.py --options "d b sl vi se" --map_name kitchen
+```
+
+`remote.launch.py` takes `--sim_time` the same way, for dome_viz.
 
 ## Environment variables
 
@@ -54,6 +66,13 @@ Config files are not chosen by environment variable ([`stack/config_conventions.
 - `linorobot2_bringup` in workspace
 - `foxglove_bridge` installed
 - Hardware: ESP32 base at `/dev/esp32`, OAK-D camera (for vision)
+
+## Stack commands
+
+`make help` lists them. They act on every package in `stack/packages.yaml` (see [`stack/README.md`](stack/README.md)):
+
+- `make clone`, `make pull`
+- `make status-repos`: `CLEAN` or `DIRTY` per repo
 
 ## Build
 

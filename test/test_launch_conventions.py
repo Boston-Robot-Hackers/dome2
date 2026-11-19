@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # test_launch_conventions — static checks of stack/launch_conventions.md
 # Author: Pito Salas and Claude Code
-# Version: 6
+# Version: 7
 # Created: 2026-11-17
 # Updated: 2026-11-19
 # Open Source Under MIT license
@@ -31,7 +31,7 @@ import re
 from pathlib import Path
 
 import pytest
-from conftest import load_launch_file
+from conftest import LAUNCH_DIR, load_launch_file
 
 from dome2.stack_registry import load_registry
 
@@ -48,6 +48,7 @@ PLAIN_TYPES = {"str", "bool", "int", "float"}
 FORBIDDEN_MODULES = {"launch", "launch_ros"}
 PRESENT_VERDICTS = {"keep", "blocked", "f06"}
 SELF_REFERENCING_DOCS = {"launch_inventory.md", "launch_conventions.md"}
+SELECTION_ARGS = {"profile", "options", "is_interactive"}
 
 # (repo, file glob), mirrored in launch_conventions.md's "Known exceptions".
 KNOWN_EXCEPTIONS = [
@@ -58,12 +59,7 @@ KNOWN_EXCEPTIONS = [
 ]
 
 # repo/file or doc path; F05 steps remove entries as they fix them.
-NOT_YET_CONVERTED = {
-    "dome2/gendrv.launch.py",
-    "dome2/remote.launch.py",
-    "dome2/robot.launch.py",
-    "inventory",
-}
+NOT_YET_CONVERTED: set[str] = set()
 
 LAUNCH_NAME_RE = re.compile(r"\b(\w+\.launch\.py)\b")
 PACKAGE_REF_RE = re.compile(r"(?:\bbl|ros2 launch)\s+(\w+)\s+(\w+\.launch\.py)")
@@ -322,6 +318,47 @@ def test_launch_files_targets_exist(launcher):
         assert package_has_launch_file(package, file_name), f"{package} {file_name}"
 
 
+def entry_annotations(path: Path) -> dict[str, str]:
+    """The @launch_this function's argument names and annotation source."""
+    for node in ast.parse(path.read_text()).body:
+        if isinstance(node, ast.FunctionDef) and any(
+            map(is_launch_this, node.decorator_list)
+        ):
+            return {arg.arg: ast.unparse(arg.annotation) for arg in node.args.args}
+    return {}
+
+
+def target_annotations(launcher: str) -> list[dict[str, str]]:
+    """Entry-function arguments of each LAUNCH_FILES target checked out here."""
+    found = []
+    for package, file_name in load_launch_file(launcher).LAUNCH_FILES.values():
+        package_dir = ALL_PACKAGES.get(package)
+        if package_dir is not None:
+            found += [
+                entry_annotations(path)
+                for path in package_dir.glob(f"launch/{file_name}")
+            ]
+    return found
+
+
+@pytest.mark.parametrize("launcher", ["robot.launch.py", "remote.launch.py"])
+def test_forwarded_args_reach_a_target_with_the_same_type(launcher):
+    # better_launch passes the launcher's arguments to every included file
+    # that declares the same name, so a forwarded name must exist and agree.
+    forwarded = entry_annotations(LAUNCH_DIR / launcher)
+    targets = target_annotations(launcher)
+    for name in forwarded.keys() - SELECTION_ARGS:
+        takers = [target[name] for target in targets if name in target]
+        assert takers, f"{name} reaches no included file"
+        assert set(takers) == {forwarded[name]}, name
+
+
+@pytest.mark.parametrize("launcher", ["robot.launch.py", "remote.launch.py"])
+def test_selection_args_are_not_target_args(launcher):
+    for target in target_annotations(launcher):
+        assert not SELECTION_ARGS & target.keys()
+
+
 @pytest.mark.parametrize(
     "label, launcher", [("Robot", "robot.launch.py"), ("Remote", "remote.launch.py")]
 )
@@ -344,8 +381,12 @@ def inventory_present_files() -> dict[str, set[str]]:
         elif repo and (
             row := re.match(r"\| `([\w.]+\.launch\.py)` \|.*\| \*\*(\w+)", line)
         ):
-            if row.group(2).lower() in PRESENT_VERDICTS:
+            verdict = row.group(2).lower()
+            if verdict in PRESENT_VERDICTS:
                 present[repo].add(row.group(1))
+            elif verdict == "rename":
+                new_name = re.search(r"\*\*rename\*\* to `([\w.]+)`", line)
+                present[repo].add(new_name.group(1))
     return present
 
 

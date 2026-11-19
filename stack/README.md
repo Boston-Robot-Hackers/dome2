@@ -46,7 +46,7 @@ All of them sit side by side in the workspace `src/` directory (`~/ros2_ws/src/<
 
 ## Launching
 
-- **Robot**: `bl dome2 robot.launch.py --options "d c vi"`. Subsystems: drivers, control, vision, voice, foxglove, battery, yellow. Nav is launched separately from `dome_nav`.
+- **Robot**: `bl dome2 robot.launch.py --options "d c vi"`. Subsystems: drivers, slam, control, vision, semantic, voice, foxglove, battery, yellow. `--map_name` and `--sim_time` pass through to the files that take them. The Nav2 modes are launched separately from `dome_nav`.
 - **Remote**: `bl dome2 remote.launch.py --options "v"`. Subsystems: viz.
 
 Both take `--profile <env var>` (defaults `$DOME_PROFILE` / `$DOME_REMOTE_PROFILE`) and `--is_interactive`.
@@ -57,6 +57,7 @@ Run from the dome2 checkout:
 
 - `make clone` clones every registered package that isn't checked out yet, next to dome2 (`../<name>`). Packages already there are left alone.
 - `make pull` runs `git pull --ff-only` in every registered package. A missing package is reported as a failure that points to `make clone`.
+- `make status-repos` fetches, then prints `CLEAN  <name>` or `DIRTY  <name>` per package. DIRTY means uncommitted files, commits to push or commits to pull; a failure (no upstream, fetch failed, not checked out) prints `FAIL   <name>: <why>`.
 
 Both keep going past a failure, list every failure at the end, and exit nonzero if there was any.
 

@@ -16,6 +16,8 @@ The packages that do the real work:
 | Package | Responsibility |
 |---------|---------------|
 | `linorobot2_bringup` | Hardware drivers: micro-ROS bridge to the ESP32, EKF odometry fusion |
+| `dome_nav` | SLAM mapping (the `slam` subsystem) |
+| `dome_semantic` | The semantic map (the `semantic` subsystem) |
 | `dome_control` | Behaviour manager, telemetry, spin survey |
 | `dome_vision_ros` | OAK-D camera and object detection |
 | `dome_voice` | Wake word, speech input and speech output |
@@ -31,14 +33,14 @@ Since F05 (2026-11), the whole stack follows one convention, written up in `stac
 - **A package's own launch file starts only that package's nodes.**
 - **Only dome2 combines packages.**
 
-So dome2 no longer has a wrapper file per subsystem. Its launchers point **straight at each package's `robot.launch.py`** (or `remote.launch.py`). The one launch file dome2 still owns is `gendrv.launch.py`, because dome2 owns the driver configuration: the URDF and `ekf.yaml`.
+So dome2 no longer has a wrapper file per subsystem. Its launchers point **straight at each package's `robot.launch.py`** (or `remote.launch.py`). The one launch file dome2 still owns is `drivers.launch.py`, because dome2 owns the driver configuration: the URDF and `ekf.yaml`.
 
 ## How to Read This Document
 
 The chapters go from foundations to the top:
 
 1. **Architecture** — better_launch, and how the pieces are wired
-2. **Hardware bringup** — `gendrv.launch.py`, the drivers everything else depends on
+2. **Hardware bringup** — `drivers.launch.py`, the drivers everything else depends on
 3. **Subsystems** — what each `LAUNCH_FILES` entry starts
 4. **Orchestrators** — `robot.launch.py` and `remote.launch.py`: profiles, tokens, interactive mode
 5. **Stack tools** — the helper scripts

@@ -4,20 +4,21 @@
 
 ### Pick up here (2026-11-19)
 
-**Checkpointed:** dome2, dome_vision, dome_voice, dome_semantic,
-dome_control and dome_nav. Details are in `history.md` and TF05.
+**Checkpointed dome2.** Details are in `history.md`, TF05 and F08.
 
-- **TF05.3 is done and passed on the robot** (`d c`, `d vi`, `d vo`, `d f`).
-  The dome2 wrappers are gone; `LAUNCH_FILES` names package files directly.
-- **TF05.4 remains:** the `gendrv` → `drivers` rename, `--sim_time` and
-  `--map_name` pass-through, and `remote.launch.py`.
-- **F07 and dome_voice F02 are done.** `rosutils` is not committed yet
-  (the user hasn't said whether to include it).
+- **TF05.4 is done but not run on the robot.** The commands are at the end
+  of TF05.4: `d`, `d b sl`, `d b sl vi se` (with `--map_name tf054`), and
+  `d sl` without a map name, which must fail.
+- **F08 is done:** `make status-repos`. It shows dome_control and
+  dome_mission DIRTY from things not made in this session: dome_control's
+  two deleted PDFs and dome_mission's untracked `__pycache__/`.
+- **`rosutils` is still uncommitted** (the user hasn't said whether to
+  include it).
 - **The vision node still aborts on a UI stop** (dome_vision chore, not started).
 
 ### Next
 
-1. **F05:** TF05.3 is done and its robot test passed (2026-11-19). Finish TF05.4: the `gendrv` → `drivers` rename, argument forwarding and `remote.launch.py`.
+1. **F05:** robot-test TF05.4 (commands in TF05). Then TF05.5 (stack docs) and TF05.7 (verify on robot and VM, including `--is_interactive`).
 2. **dome_vision's shutdown-abort chore**, then re-test a UI stop for the
    abort and I06's flood.
 3. **I02: a full-stack run with drive** on 2 NN threads, watching

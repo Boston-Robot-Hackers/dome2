@@ -317,7 +317,19 @@ launch file, README or `stack/` doc.
 
 ## TF05.4 — Point dome2's top-level launchers at package-level files
 
-**Status**: in progress. The wrappers were replaced (2026-11-19, with TF05.3). Still to do: the `gendrv` → `drivers` rename, argument forwarding and `remote.launch.py`. The existence test is already there: TF05.6's `test_launch_files_targets_exist` covers both launchers and passes.
+**Status**: done (2026-11-19). Not yet run on the robot.
+
+**Results:**
+
+- **Wrappers replaced** by direct `LAUNCH_FILES` entries (with TF05.3).
+- **`gendrv.launch.py` → `drivers.launch.py`** (decision 3), brought to the convention: header usage, module and entry docstrings, entry `drivers_launch`. dome_control's `gendrv` subsystem label is unrelated (it matches the `micro_ros_agent` process) and was left alone.
+- **New `slam` and `semantic` subsystems** (decision 5): `dome_nav robot.launch.py` and `dome_semantic robot.launch.py`. Both start with `s`, so the tokens are `sl` and `se`, not decision 5's `s`.
+- **Argument forwarding** (decision 2): `robot.launch.py` declares `sim_time` and `map_name`, `remote.launch.py` declares `sim_time`. No forwarding code: better_launch's `include` passes the top launcher's arguments to every included file, and a better_launch file keeps only the names it declares. Written into `stack/launch_conventions.md`.
+- **`remote.launch.py`:** entry renamed `remote_launch`, `--sim_time` reaches dome_viz. No new remote subsystems were agreed.
+- **Entry functions** renamed `robot_launch` and `remote_launch`; `robot.launch.py` got a module docstring.
+- **Tests:** `NOT_YET_CONVERTED` is now empty. New `test_forwarded_args_reach_a_target_with_the_same_type` and `test_selection_args_are_not_target_args`. The inventory test now reads a **rename** verdict as the new name being present. The existence test was already there (TF05.6). dome2: 111 passed, 9 skipped.
+- **Install:** the rename left a dangling symlink in `build/dome2`, which failed the build. A clean rebuild fixed it; all three launchers parse with `--help`.
+- **Robot test (to do):** `d`, then `d b sl --map_name <name>` and `d b sl vi se --map_name <name>`.
 
 **Description**:
 

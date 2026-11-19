@@ -75,8 +75,17 @@ annotation to `click`. So:
   (an env var holding a token string), or `--is_interactive`.
 - **With neither `--options` nor the profile env var**, the launcher lists
   the subsystems and stops (F04).
-- **Arguments are forwarded** (`--sim_time`, `--map_name`): the launcher
-  passes them on to the files that declare them. TF05.4 builds this.
+- **Arguments are forwarded** (`--sim_time`, `--map_name`). The launcher
+  only declares them: better_launch's `include` passes the top launcher's
+  arguments to every included file, and a better_launch file keeps only the
+  names its entry function declares.
+  - **A forwarded name means the same thing everywhere.** It must be declared
+    by at least one target, with the same type in every target that has it.
+    `test_forwarded_args_reach_a_target_with_the_same_type` checks this.
+  - **No target may declare `profile`, `options` or `is_interactive`**, or
+    it would receive the launcher's selection arguments.
+  - Non-better_launch targets (XML, stock ROS launch) receive the same
+    arguments as launch arguments and ignore the ones they don't declare.
 
 ## Entry function
 

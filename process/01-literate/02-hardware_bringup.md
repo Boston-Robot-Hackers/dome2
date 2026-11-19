@@ -3,13 +3,13 @@ version: "1.2"
 generated: "2026-11-19"
 ---
 
-# Hardware Bringup: gendrv.launch.py
+# Hardware Bringup: drivers.launch.py
 
-## The Role of gendrv
+## The Role of drivers.launch.py
 
-`gendrv.launch.py` is the lowest-level launch file in `dome2`. It starts the hardware drivers — the nodes that talk directly to physical devices. Everything else in the robot depends on what this file brings up.
+`drivers.launch.py` is the lowest-level launch file in `dome2`. It starts the hardware drivers — the nodes that talk directly to physical devices. Everything else in the robot depends on what this file brings up.
 
-"gendrv" is short for *generic driver* (or possibly *general driver*), reflecting that this file configures a general-purpose hardware bringup stack rather than a custom one. The actual work is delegated to `linorobot2_bringup`, a community ROS2 package for differential-drive robots.
+It was called `gendrv.launch.py` until 2026-11-19 (TF05.4), after the robot's firmware configuration; the new name matches its subsystem, `drivers`. The actual work is delegated to `linorobot2_bringup`, a community ROS2 package for differential-drive robots.
 
 ## Path Resolution
 
@@ -78,6 +78,5 @@ Disabling Madgwick (`madgwick=false`) means orientation from the IMU goes direct
 
 ## Observations
 
-1. **The name doesn't match its subsystem.** The subsystem is `drivers`; TF05.4 renames the file to `drivers.launch.py`.
-2. **The entry function is still `start_nav`**, a leftover from a template. better_launch doesn't care about the name, so renaming it is free.
-3. **No usage header or docstring yet.** It is the one dome2 file the launch-convention test still lists as not converted.
+1. **The serial port and baud rate are hard-coded.** They match the ESP32's udev rule and firmware; a second robot would need them as arguments.
+2. **It receives the launcher's arguments too.** better_launch passes `--map_name` and the rest to `linorobot2_bringup` as launch arguments, which it ignores. Harmless, but surprising in its logs.

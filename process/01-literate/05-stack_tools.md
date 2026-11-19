@@ -1,6 +1,6 @@
 ---
-version: "1.0"
-generated: "2026-11-16"
+version: "1.1"
+generated: "2026-11-19"
 ---
 
 # The Stack Tools: stack_registry and stack_ops
@@ -10,7 +10,7 @@ generated: "2026-11-16"
 dome2 is also the **hub for the whole DOME stack**: a dozen repos that live side by side in `~/ros2_ws/src`, on both the robot and the remote computer. Two modules turn that into something you can act on:
 
 - **`stack_registry`** loads `stack/packages.yaml`, the single list of DOME packages, and validates it.
-- **`stack_ops`** is a small command-line tool that runs one git operation across every registered package. It backs `make clone` and `make pull`.
+- **`stack_ops`** is a small command-line tool that runs one git operation across every registered package. It backs `make clone`, `make pull` and `make status-repos`.
 
 The typical use on a fresh computer is three commands:
 
@@ -18,6 +18,7 @@ The typical use on a fresh computer is three commands:
 git clone git@github.com:Boston-Robot-Hackers/dome2.git ~/ros2_ws/src/dome2
 cd ~/ros2_ws/src/dome2 && make clone     # clones the other 11 next to it
 make pull                                # later: fast-forward all 12
+make status-repos                        # CLEAN or DIRTY, per repo
 ```
 
 ## The Registry as Data
@@ -62,7 +63,7 @@ The checks, each raising `RegistryError` naming the bad entry:
 
 `yaml.safe_load` is used rather than `yaml.load` because it only builds plain data (dicts, lists, strings), never arbitrary Python objects.
 
-## One Engine, Two Operations
+## One Engine, Three Operations
 
 `stack_ops` runs one *operation* across all packages. An operation is a function from a package and the `src/` directory to a result:
 
@@ -70,6 +71,7 @@ The checks, each raising `RegistryError` naming the bad entry:
 OPERATIONS: dict[str, Callable[[StackPackage, Path], PackageResult]] = {
     "clone": clone_package,
     "pull": pull_package,
+    "status": status_package,
 }
 ```
 
@@ -77,13 +79,13 @@ This *dispatch table* replaces an if-chain: argparse's `choices` come from its k
 
 ```mermaid
 flowchart TD
-    A[make clone / make pull] --> B[main: operation, --registry, --src]
+    A[make clone / pull / status-repos] --> B[main: operation, --registry, --src]
     B --> C[load_registry]
     C --> D[for each package]
     D --> E[OPERATIONS operation]
     E --> F[PackageResult name, is_ok, detail]
     F --> D
-    D --> G[summary_lines]
+    D --> G[summary_lines, or status_lines]
     G --> H{any failed?}
     H -->|yes| I[exit 1]
     H -->|no| J[exit 0]
@@ -113,6 +115,33 @@ def clone_package(package, src_dir):
 - **`clone` never touches what exists.** Anything at the path counts as present, whether a checkout or a stray file, and is reported, not "fixed". That makes `clone` *idempotent*: running it twice is harmless.
 - **`--ff-only`** means a pull either fast-forwards or fails. It never creates a merge commit in a package with local work; that is left to a person.
 
+## Status: Is Each Repo in Step?
+
+`status` answers one question per repo: *is there anything here I haven't committed, pushed or pulled?*
+
+```python
+fetched = run_git(package.name, ["-C", str(package_dir), "fetch", "--quiet"])
+...
+counts = behind_ahead(package_dir)        # git rev-list --left-right --count @{u}...HEAD
+```
+
+- **It fetches first.** Without a fetch, "behind" compares against whatever the last pull saw, which can be days old.
+- **`@{u}...HEAD` with `--left-right --count`** prints two numbers in one call: commits only on the upstream (to pull) and commits only here (to push). The *symmetric difference* `...` is what makes both sides come out at once.
+- **Uncommitted files** are the lines of `git status --porcelain`, which is git's stable, script-friendly format.
+- **A repo with no upstream is a failure, not "clean".** There is nothing to compare against, and guessing a branch would hide that.
+
+### Its own output format
+
+Every other operation prints `ok`/`FAIL` lines and a summary. `status` prints only one line per repo, the format the user asked for:
+
+```
+DIRTY  dome2
+CLEAN  dome_nav
+FAIL   dome_x: no upstream branch
+```
+
+`status_package` still builds the full detail (`2 uncommitted, 1 to push`); `status_lines` reduces it to CLEAN or DIRTY. The counts are kept because the tests check them, and showing them again is a one-line change.
+
 ## Turning git Output into One Line
 
 `run_git` runs git without a shell and reduces its output to one line per package:
@@ -133,6 +162,7 @@ The tests replace `subprocess.run` with a fake that records each git argument li
 - clone builds `["clone", <repo>, <src>/<name>]` for exactly the missing packages;
 - pull uses `--ff-only` and skips git entirely for a missing package;
 - one failing package still lets the rest run, and the exit status becomes 1.
+- status is driven by a *scripted* fake that answers each git subcommand (`status`, `rev-list`, `fetch`) per repo, so clean, dirty, ahead, behind, no upstream and fetch failure are each one line of setup.
 
 A separate test reads the real `packages.yaml` and checks that **every package appears in the spec's table and in `stack/README.md`**, so the three lists can't drift apart unnoticed.
 
@@ -140,5 +170,6 @@ A separate test reads the real `packages.yaml` and checks that **every package a
 
 - **Git runs one package at a time.** Twelve serial pulls over Wi-Fi take a few seconds each. A thread pool would cut that a lot, since each git call is I/O-bound and independent.
 - **A failed `clone` can leave a partial directory**, which the next `clone` would then call "already present". Removing the target after a failed clone, or treating a directory without `.git` as a failure, would close that gap.
-- **`pull` doesn't say *why* a package is dirty or diverged.** Showing `git status --short` for a failed package would save a manual `cd`.
+- **DIRTY doesn't say why.** The counts are computed and then dropped; `git status` in that repo, or printing the detail after the name, tells uncommitted from unpushed.
+- **Two git runners.** `run_git` (one-line result) and `git` (raw process) both wrap `subprocess.run`; folding them together would be small but worthwhile.
 - **`--src ..` assumes dome2 lives in the workspace `src/`.** That is true by convention; the Makefile states it explicitly rather than guessing, but it is still an assumption about layout.

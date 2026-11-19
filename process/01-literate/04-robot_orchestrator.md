@@ -9,7 +9,7 @@ generated: "2026-11-19"
 
 dome2 has **two top-level launchers**, one per computer:
 
-- **`robot.launch.py`** runs on the Pi and brings up drivers, control, vision, voice, foxglove, battery telemetry and the Yellow Pad.
+- **`robot.launch.py`** runs on the Pi and brings up drivers, SLAM, control, vision, the semantic map, voice, foxglove, battery telemetry and the Yellow Pad.
 - **`remote.launch.py`** runs on the remote computer (the VM on the Mac mini). For now it brings up only `dome_viz`'s map view.
 
 Both decide *which* subsystems to start from a **profile** (an environment variable naming a token string), a direct **`--options`** override, or **interactive** yes/no confirmation. They share all of that logic, so each launcher is little more than a table.
@@ -41,7 +41,8 @@ Each launcher declares one **ordered dict** from subsystem name to `(package, la
 
 ```python
 LAUNCH_FILES = {
-    "drivers": ("dome2", "gendrv.launch.py"),
+    "drivers": ("dome2", "drivers.launch.py"),
+    "slam": ("dome_nav", "robot.launch.py"),
     "control": ("dome_control", "robot.launch.py"),
     "vision": ("dome_vision_ros", "robot.launch.py"),
     "voice": ("dome_voice", "robot.launch.py"),
@@ -66,7 +67,7 @@ Since 2026-11-19, **every entry but `drivers` points straight at another package
 - **`battery`** and **`yellow`** on the robot, so each can be toggled on its own. `--options "d b"` gives drivers plus battery telemetry.
 - **`viz`** on the remote, which uses `dome_viz`'s own `remote.launch.py` unchanged.
 
-Nav/SLAM is not in either table. It is launched separately, per mode, from `dome_nav`, because it doesn't fit the on-or-off model.
+SLAM mapping is the `slam` subsystem. The Nav2 modes are still launched separately from `dome_nav`, until dome_nav I13.
 
 ## Token Resolution
 
@@ -182,6 +183,29 @@ for name, is_enabled in cfg.items():
 
 - The resolved names go into a **set**, then into a `{name: bool}` dict keyed by the table. A token given twice (`"d drivers"`) therefore launches once, and the **table order, not the token order**, decides the include order.
 - **Interactive mode starts from the profile's selection**, not from all-off, so the user only flips what differs.
+
+## Forwarding Arguments to Subsystems
+
+Both launchers declare more than the three selection arguments: `robot.launch.py` also takes `sim_time` and `map_name`, and `remote.launch.py` takes `sim_time`. **Neither body uses them.**
+
+They reach the subsystems through better_launch itself:
+
+- `bl.include` passes the **top launcher's arguments** to every file it includes (`pass_launch_func_args=True` is the default).
+- An included better_launch file **keeps only the names its entry function declares** and drops the rest.
+
+So declaring `map_name` once is enough for `--map_name kitchen` to reach both `dome_nav`'s and `dome_semantic`'s `robot.launch.py`.
+
+```mermaid
+flowchart LR
+    CLI["--options 'sl se'<br/>--map_name kitchen"] --> R[robot_launch]
+    R -->|"all launcher args"| N["dome_nav robot_launch<br/>keeps map_name, sim_time"]
+    R -->|"all launcher args"| S["dome_semantic robot_launch<br/>keeps map_name"]
+```
+
+Because the matching is by name, **a name must mean the same thing in every package**. Two convention tests guard that:
+
+- every forwarded argument is declared by at least one target, with the same type wherever it appears
+- no target declares `profile`, `options` or `is_interactive`, which would silently receive the launcher's own selection
 
 ## Observations
 

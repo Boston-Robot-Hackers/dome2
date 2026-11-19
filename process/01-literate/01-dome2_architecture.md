@@ -41,7 +41,9 @@ graph TD
     robot["dome2 robot.launch.py<br/>LAUNCH_FILES"]
     remote["dome2 remote.launch.py<br/>LAUNCH_FILES"]
 
-    gendrv["dome2 gendrv.launch.py"]
+    drivers["dome2 drivers.launch.py"]
+    nav["dome_nav<br/>robot.launch.py"]
+    sem["dome_semantic<br/>robot.launch.py"]
     lino["linorobot2_bringup<br/>bringup.launch.py"]
     dc["dome_control<br/>robot.launch.py"]
     dvr["dome_vision_ros<br/>robot.launch.py"]
@@ -52,7 +54,9 @@ graph TD
     viz["dome_viz<br/>remote.launch.py"]
 
     ENV --> robot
-    robot --> gendrv --> lino
+    robot --> drivers --> lino
+    robot --> nav
+    robot --> sem
     robot --> dc
     robot --> dvr
     robot --> dv
@@ -88,5 +92,5 @@ A subsystem that can't run on a computer simply isn't in that computer's table. 
 ## Observations
 
 1. **The tables depend on other packages' file names.** Renaming a package's launch file breaks dome2. The existence test catches it, but only for packages checked out on that computer.
-2. **`gendrv` doesn't yet follow the naming convention.** TF05.4 renames it to `drivers.launch.py`, matching its subsystem name.
-3. **Launch arguments don't pass through yet.** `--sim_time` and `--map_name` can't reach a subsystem from dome2 (TF05.4).
+2. **Forwarding is by name, implicitly.** better_launch hands the launcher's arguments to every included file that declares the same name, so `--map_name` reaches both `slam` and `semantic` with no code in dome2. The price is that a name must mean the same thing in every package; a convention test checks the names and types.
+3. **Forwarded arguments are all-or-nothing.** There is no way to give one subsystem an argument another also declares, e.g. a different `map_name` for SLAM and for the semantic map.

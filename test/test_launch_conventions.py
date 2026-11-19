@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # test_launch_conventions — static checks of stack/launch_conventions.md
 # Author: Pito Salas and Claude Code
-# Version: 5
+# Version: 6
 # Created: 2026-11-17
 # Updated: 2026-11-19
 # Open Source Under MIT license
@@ -59,21 +59,9 @@ KNOWN_EXCEPTIONS = [
 
 # repo/file or doc path; F05 steps remove entries as they fix them.
 NOT_YET_CONVERTED = {
-    "dome2/dome_control.launch.py",
-    "dome2/dome_vision.launch.py",
-    "dome2/dome_voice.launch.py",
-    "dome2/foxglove.launch.py",
     "dome2/gendrv.launch.py",
     "dome2/remote.launch.py",
     "dome2/robot.launch.py",
-    "dome_control/remote.launch.py",
-    "dome_nav/just_explorer.launch.py",
-    "dome_nav/nav2_experiment_navigation.launch.py",
-    "dome_nav/nav_experiment.launch.py",
-    "dome_vision/dome_vision_ros.launch.py",
-    "dome_vision/remote.launch.py",
-    "dome_voice/remote.launch.py",
-    "dome_voice/robot.launch.py",
     "inventory",
 }
 

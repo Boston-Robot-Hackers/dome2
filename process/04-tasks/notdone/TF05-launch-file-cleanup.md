@@ -167,7 +167,7 @@ TF05.6's test rules.
 
 ## TF05.2 — Make package-level launch files match the convention
 
-**Status**: in progress
+**Status**: done (2026-11-19). dome_mission was skipped; voice is parked.
 
 **Progress:**
 
@@ -242,6 +242,34 @@ TF05.6's test rules.
     --help` parses. TF05.6: 112 passed in dome2's suite, 16 xfailed.
   - **The VM's install tree still has `view.launch.py`** after a rebuild.
     colcon doesn't delete renamed files. It was removed by hand on the Pi.
+  - **VM: done (user report, 2026-11-19).** The steps were pull, build,
+    remove the stale file, the full dome_viz suite, and `bl dome2
+    remote.launch.py --options "v"`.
+- **dome_voice: done (2026-11-19). The environment was verified on the
+  robot; speech is not audible yet.**
+  - `bl dome_voice robot.launch.py`, with the board and speaker in. The
+    `env=` that better_launch passed to `speech_output` matched exactly: both
+    piper paths from the shell, plus the fallbacks `PIPER_LENGTH_SCALE=1.0`,
+    `SPEECH_GAIN=0.25` and `SPEECH_ALSA_DEVICE=plughw:0,0`.
+  - An `/announcement` reached `speech_output`, which logged `Speech output
+    failed: No such file` for the piper binary and kept running.
+  - **The voice runtime isn't installed on the Pi.** The piper binary and
+    model (gitignored in dome_control, now gone), `openwakeword` and its
+    dependencies, `vosk` and its model, and the `hey_marvin` wake model are
+    all missing. `voice_input` crashes on `openwakeword`, as in E2b. That
+    is setup work, outside F05.
+  - `robot.launch.py`'s five `os.environ.get(...)` defaults became literal
+    `""`. The body reads the environment through `ENV_FALLBACKS`.
+  - **Behaviour is unchanged.** Precedence is argument, then shell variable,
+    then the old launch fallback. Those fallbacks differ from
+    `speech_output`'s own defaults (gain 0.25 vs 0.35, length scale 1.0 vs
+    1.25, device `plughw:0,0` vs `""`), so they were kept.
+  - The header got usage lines, plus a module and an entry docstring.
+  - New `test/test_launch.py`: 6 passed, covering the precedence, literal
+    defaults and both nodes. The suite's other 5 failures were already there
+    (dome_voice I01).
+  - The header hook was installed. `bl dome_voice robot.launch.py --help`
+    parses. TF05.6: 113 passed, 9 skipped, 15 xfailed.
 
 **Description**: Work one package at a time: dome_control, dome_mission,
 dome_nav, dome_semantic, dome_telemetry, dome_vision, dome_viz, dome_voice.
@@ -259,7 +287,19 @@ only on the robot, because it needs the built workspace.
 
 ## TF05.3 — Delete files that didn't make the cut
 
-**Status**: not done
+**Status**: done (2026-11-19)
+
+**Approved list and result (user, 2026-11-19):**
+
+- **Group A, deleted:** `dome_control`, `dome_voice` and `dome_vision`'s `remote.launch.py`; `dome_nav`'s `nav_experiment`, `nav2_experiment_navigation` and `just_explorer`. dome_voice's `setup.py` listed its `remote.launch.py` by name and was fixed. References were updated in dome_nav's `current.md`, `tunable_parameters.md`, `simhowto.md`, `notes.md` and literate 07, plus the vision and voice literate docs.
+- **Group B, deleted together with TF05.4's first bullet:** dome2's four wrappers (`dome_control`, `dome_vision`, `dome_voice`, `foxglove`). `LAUNCH_FILES` now points at `dome_control robot`, `dome_vision_ros robot`, `dome_voice robot` and `foxglove_bridge foxglove_bridge_launch.xml`. That file's default port is 8765, which the wrapper used to pass. `DOME_MODE` has no readers left.
+- **Group C, deleted:** `dome_vision_ros.launch.py`. **dome_semantic's power test `oak` stage switched to `robot.launch.py`** (user's choice). `publish_raw` is now off there, so earlier `oak` baselines carried more load; `power_testing.md` says so.
+- **dome2's README was rewritten**: the launch table, subsystems, Kilted, `bl` and `--symlink-install`. TF05.6's stale-reference test had caught it.
+- **Install trees:** a clean `--symlink-install` rebuild of dome2, dome_control, dome_nav, dome_voice and dome_vision_ros removed 11 stale installed files. Every remaining launch file parses with `--help`.
+- **Tests:** dome2 103 passed, 9 skipped, 4 xfailed (`dome2/gendrv`, `remote`, `robot`, and `inventory`, which waits on the `gendrv` → `drivers` rename in TF05.4). dome_semantic's power test: 7 passed.
+- **Robot test passed (2026-11-19):** `d c`, `d vi`, `d vo` and `d f` all worked through the new direct entries, as the user reported. `d vo`'s `voice_input` still stops on the missing voice runtime (Blocked in `current.md`).
+
+**Description (as planned)**:
 
 **Description**: Remove every launch file whose final verdict is **delete**
 or **merged**. Also remove stale references to them:
@@ -277,7 +317,7 @@ launch file, README or `stack/` doc.
 
 ## TF05.4 — Point dome2's top-level launchers at package-level files
 
-**Status**: not done
+**Status**: in progress. The wrappers were replaced (2026-11-19, with TF05.3). Still to do: the `gendrv` → `drivers` rename, argument forwarding and `remote.launch.py`. The existence test is already there: TF05.6's `test_launch_files_targets_exist` covers both launchers and passes.
 
 **Description**:
 

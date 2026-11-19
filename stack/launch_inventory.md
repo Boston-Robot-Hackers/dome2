@@ -94,7 +94,7 @@ Experiments.
 
 | File | Starts | Args | Last change | Status | Proposed |
 |---|---|---|---|---|---|
-| `robot.launch.py` | `dome_vision_ros_node` (lifecycle → active), `depth` and `publish_raw` fixed | `config` | 2026-11-13 | **Pass**: E1 (an empty config falls back to `$DOME_VISION_CONFIG`) | **keep**, taking in `dome_vision_ros.launch.py`'s arguments |
+| `robot.launch.py` | `dome_vision_ros_node` (lifecycle → active), `depth` and `publish_raw` fixed | `config` | 2026-11-13 | **Pass**: E1 (an empty config then fell back to `$DOME_VISION_CONFIG`; since F07 it means the installed `roboflow_oak.yaml`) | **keep**, taking in `dome_vision_ros.launch.py`'s arguments |
 | `dome_vision_ros.launch.py` | Same node | `config` (required), `depth`, `perf`, `enable_embeddings` | 2026-09-02 | **Pass**: every semantic run | **merge** into `robot.launch.py`. Also fix `--depth false` doing nothing (a dome_vision bug). |
 | `remote.launch.py` | Nothing | none | 2026-05-11 | Empty | **delete** |
 

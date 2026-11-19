@@ -17,26 +17,39 @@ dome2  (this package — launch orchestration only)
 
 ## Launch files
 
+dome2 owns only the top-level launchers and the driver bringup. Every other subsystem is a package's own `robot.launch.py`, included directly ([`stack/launch_conventions.md`](stack/launch_conventions.md)).
+
 | File | Purpose |
 |---|---|
-| `robot.launch.py` | Full system: all subsystems in one command |
-| `dome_control.launch.py` | Drive/nav only (robot or remote mode) |
-| `dome_vision.launch.py` | OAK-D vision pipeline only |
-| `dome_voice.launch.py` | Voice control pipeline (robot mode only) |
-| `foxglove.launch.py` | Foxglove bridge only |
-| `gendrv.launch.py` | Base driver + EKF + URDF state publisher |
+| `robot.launch.py` | The robot: chosen subsystems in one command |
+| `remote.launch.py` | The remote computer: the `viz` subsystem (dome_viz) |
+| `gendrv.launch.py` | Base driver + EKF + URDF state publisher (the `drivers` subsystem) |
+
+`robot.launch.py`'s subsystems, chosen with `--options` (any unambiguous prefix):
+
+| Subsystem | Launches |
+|---|---|
+| `drivers` | `dome2 gendrv.launch.py` |
+| `control` | `dome_control robot.launch.py` |
+| `vision` | `dome_vision_ros robot.launch.py` |
+| `voice` | `dome_voice robot.launch.py` |
+| `foxglove` | `foxglove_bridge foxglove_bridge_launch.xml` (port 8765) |
+| `battery` | `dome_telemetry robot.launch.py` |
+| `yellow` | `yellow_pad yellow_pad.launch.py` |
 
 ## Environment variables
 
 | Variable | Default | Values |
 |---|---|---|
-| `DOME_MODE` | `robot` | `robot` — run on hardware; `remote` — run on laptop |
+| `DOME_PROFILE` | `robot` | name of an env var holding a subsystem token string |
 | `DOME_CAMERA` | `oak` | `oak` — OAK-D required |
 | `ROBOFLOW_API_KEY` | _(none)_ | API key for Roboflow model download |
 
+Config files are not chosen by environment variable ([`stack/config_conventions.md`](stack/config_conventions.md)).
+
 ## Prerequisites
 
-- ROS2 Humble
+- ROS 2 Kilted
 - `better_launch` package in workspace
 - `linorobot2_bringup` in workspace
 - `foxglove_bridge` installed
@@ -46,24 +59,17 @@ dome2  (this package — launch orchestration only)
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-select dome2
+colcon build --symlink-install --packages-select dome2
 source install/setup.bash
 ```
 
 ## Usage
 
 ```bash
-# Full robot bring-up
-ros2 launch dome2 robot.launch.py
-
-# Drive/nav only
-ros2 launch dome2 dome_control.launch.py
-
-# Vision only (requires OAK-D, DOME_MODE=robot)
-ros2 launch dome2 dome_vision.launch.py
-
-# Remote mode (laptop-side nav)
-DOME_MODE=remote ros2 launch dome2 dome_control.launch.py
+bl dome2 robot.launch.py --options "d c vi"   # drivers + control + vision
+bl dome2 robot.launch.py --options "d f"      # drivers + Foxglove bridge
+bl dome2 robot.launch.py                      # subsystems from $DOME_PROFILE
+bl dome2 remote.launch.py --options "v"       # on the remote computer: the viewer
 ```
 
 ## Config files

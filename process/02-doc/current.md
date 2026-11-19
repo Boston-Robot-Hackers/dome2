@@ -4,26 +4,20 @@
 
 ### Pick up here (2026-11-19)
 
-**Checkpointed across three repos:** dome2, dome_vision and dome_viz (twice).
-Details are in `history.md` and TF05.
+**Checkpointed:** dome2, dome_vision, dome_voice, dome_semantic,
+dome_control and dome_nav. Details are in `history.md` and TF05.
 
-- **TF05.2:** dome_vision is converted, and its `--depth` fix was verified
-  on the robot. dome_viz's `view.launch.py` is now `remote.launch.py`. Its
-  full suite and a launch still need the VM; the commands are in TF05.
-  dome_voice is last.
-- **The vision node aborts on a UI stop** (`std::terminate` in depthai).
-  The fix is an open dome_vision chore, `release_device()` called from
-  `main()`, and is not started. Its robot re-test may also close I06.
-- **`nn_threads` is back to 2** after the user rewired the power. I02
-  stays open until a full-stack run with drive shows no brownouts.
+- **TF05.3 is done and passed on the robot** (`d c`, `d vi`, `d vo`, `d f`).
+  The dome2 wrappers are gone; `LAUNCH_FILES` names package files directly.
+- **TF05.4 remains:** the `gendrv` → `drivers` rename, `--sim_time` and
+  `--map_name` pass-through, and `remote.launch.py`.
+- **F07 and dome_voice F02 are done.** `rosutils` is not committed yet
+  (the user hasn't said whether to include it).
+- **The vision node still aborts on a UI stop** (dome_vision chore, not started).
 
 ### Next
 
-1. **F05, TF05.2**: dome_control, dome_nav, dome_semantic and dome_telemetry
-   are done, dome_vision and dome_viz are done in code (2026-11-19), and
-   dome_mission was skipped. Carry on with dome_voice. dome_viz still needs
-   its full suite and a launch on the VM. Remove each from `NOT_YET_CONVERTED` (TF05.6's
-   strict xfails) as it is done. Progress is in TF05.
+1. **F05:** TF05.3 is done and its robot test passed (2026-11-19). Finish TF05.4: the `gendrv` → `drivers` rename, argument forwarding and `remote.launch.py`.
 2. **dome_vision's shutdown-abort chore**, then re-test a UI stop for the
    abort and I06's flood.
 3. **I02: a full-stack run with drive** on 2 NN threads, watching
@@ -59,6 +53,10 @@ Details are in `history.md` and TF05.
   `colcon build` won't.
 
 ### Blocked
+
+- **Voice can't run on the Pi: its runtime isn't installed.** The piper
+  binary and model, `openwakeword`, `vosk` and the `hey_marvin` model are
+  missing (TF05.2, dome_voice). An issue was offered but not opened.
 
 - **F02 is parked pending `dome_control`'s F19.** `behavior_manager` and
   `mission_node` both subscribe to `/intent` with no coordination. See

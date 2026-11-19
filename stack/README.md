@@ -64,12 +64,13 @@ Both keep going past a failure, list every failure at the end, and exit nonzero 
 
 1. Clone dome2 into the workspace: `git clone git@github.com:Boston-Robot-Hackers/dome2.git ~/ros2_ws/src/dome2`.
 2. Run `make clone` in `~/ros2_ws/src/dome2`. It clones the other 11 packages next to dome2.
-3. From `~/ros2_ws`, run `colcon build`, then `source install/setup.bash`.
+3. From `~/ros2_ws`, run `colcon build --symlink-install`, then `source install/setup.bash`. With `--symlink-install`, edits to a package's `config/` take effect without a rebuild ([`config_conventions.md`](config_conventions.md)).
 4. Run `bl dome2 remote.launch.py --options "v"`.
 
 ## Other stack-wide docs
 
 - [`launch_conventions.md`](launch_conventions.md): the rules every DOME launch file follows.
+- [`config_conventions.md`](config_conventions.md): where config files live, what they're called, and how nodes find them.
 - [`launch_inventory.md`](launch_inventory.md): every DOME launch file, whether it has been shown to work, and its F05 verdict.
 - [`dome_developer_onboarding.md`](dome_developer_onboarding.md): topics, services, messages, intent flow, and how to add CLI and voice commands. **It predates `dome_nav`, `dome_mission`, `dome_semantic` and `dome_viz`**, so check claims about those against their specs.
 

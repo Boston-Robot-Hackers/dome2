@@ -1,6 +1,6 @@
 ---
-version: "1.1"
-generated: "2026-05-13"
+version: "1.2"
+generated: "2026-11-19"
 ---
 
 # Hardware Bringup: gendrv.launch.py
@@ -11,21 +11,6 @@ generated: "2026-05-13"
 
 "gendrv" is short for *generic driver* (or possibly *general driver*), reflecting that this file configures a general-purpose hardware bringup stack rather than a custom one. The actual work is delegated to `linorobot2_bringup`, a community ROS2 package for differential-drive robots.
 
-## Mode Guard
-
-```python
-mode = os.environ.get("DOME_MODE", "robot")
-
-@launch_this(ui=True)
-def start_nav():
-    if mode != "robot":
-        logging.warning("DOME_MODE != robot, skipping hardware driver bringup")
-        return
-    bl = BetterLaunch()
-```
-
-Hardware can only be launched on the robot itself. If `DOME_MODE` is not `robot`, the function logs a warning and returns early — `linorobot2_bringup` is never started. This is important because the bringup tries to open serial devices that don't exist on a dev machine. The early `return` before constructing `BetterLaunch` ensures no partial launch state is created.
-
 ## Path Resolution
 
 Two external config files must be resolved to absolute paths before being passed as launch arguments:
@@ -35,7 +20,7 @@ urdf_path = bl.find("dome2", "dome3.urdf")
 ekf_config_path = bl.find("dome2", "ekf.yaml")
 ```
 
-These files live in the `dome2` package itself. `bl.find()` resolves them to the installed share path at launch time rather than at package build time, so the paths survive `colcon build` reinstalls.
+These files live in the `dome2` package itself. There is no mode guard: the drivers are only listed in `robot.launch.py`, so they never start on the remote computer. `bl.find()` resolves them to the installed share path at launch time rather than at package build time, so the paths survive `colcon build` reinstalls.
 
 ## The linorobot2_bringup Arguments
 
@@ -90,3 +75,9 @@ graph LR
 The ESP32 runs micro-ROS firmware that publishes wheel odometry and IMU data. The `linorobot2_bringup` launch starts a micro-ROS agent that bridges the serial connection into ROS2 topics. The EKF then fuses odometry and IMU to produce a filtered pose estimate used by navigation.
 
 Disabling Madgwick (`madgwick=false`) means orientation from the IMU goes directly into the EKF rather than through a separate complementary filter — the EKF itself handles sensor fusion, which is cleaner when the EKF is already tuned for the IMU's noise characteristics.
+
+## Observations
+
+1. **The name doesn't match its subsystem.** The subsystem is `drivers`; TF05.4 renames the file to `drivers.launch.py`.
+2. **The entry function is still `start_nav`**, a leftover from a template. better_launch doesn't care about the name, so renaming it is free.
+3. **No usage header or docstring yet.** It is the one dome2 file the launch-convention test still lists as not converted.

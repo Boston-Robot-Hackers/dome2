@@ -4,6 +4,15 @@
 
 - Platform: Raspberry Pi, Linux 6.8.0-1057-raspi
 - ROS 2 distro: **Kilted** on the robot (`/opt/ros/kilted`). Some package docs still say Jazzy.
+- **Shell env comes from `~/rosutils/`**, not `.bashrc` itself. `.bashrc` sources `ros2_robot_bashrc.bash`, which sources `ros2_dome_bashrc.bash`, where the `DOME_*` variables are exported. That repo is shared with the remote computers.
+- **tmux keeps removed variables alive.** New panes inherit the tmux server's copy of the environment, so a deleted export survives until `tmux set-environment -g -u NAME` or `tmux kill-server` (found 2026-11-19, retiring `DOME_VISION_CONFIG`).
+
+## Build with `--symlink-install` (2026-11-19)
+
+Always `colcon build --symlink-install`. Then installed `config/` files are symlinks to the source, so a config edit is live without a rebuild (`stack/config_conventions.md`).
+
+- Without it, the installed copy goes stale. `roboflow_oak.yaml` kept `nn_threads: 1` for an hour after the source said 2.
+- A package first built with copies needs its `build/<pkg>` and `install/<pkg>` removed before a symlink build. colcon won't swap copies for links. On the Pi, `dome2`, `dome_control`, `dome_nav`, `dome_vision_ros` and `dome_voice` have been switched (2026-11-19); the rest are still copies.
 
 ## Runtime gotchas (found 2026-11-17)
 

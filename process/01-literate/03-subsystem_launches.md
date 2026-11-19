@@ -1,100 +1,71 @@
 ---
-version: "1.1"
-generated: "2026-07-08"
+version: "2.0"
+generated: "2026-11-19"
 ---
 
-# Subsystem Launch Files: Control, Vision, Voice, and Drivers
+# Subsystems: What Each Entry Starts
 
-The subsystem launch files in dome2 — `dome_control.launch.py`, `dome_vision.launch.py`,
-`dome_voice.launch.py`, and `gendrv.launch.py` — are intentionally thin wrappers.
-Their job is to delegate to the owning subsystem package; policy about *when* to launch
-a subsystem lives in the top-level orchestrator (`robot.launch.py`), not here.
+## No more wrappers
 
-This separation keeps each file trivially auditable and makes the intent of the
-`robot.launch.py` profile system legible without hunting through conditionals scattered
-across multiple files.
+Until 2026-11-19, dome2 had a thin wrapper file per subsystem: `dome_control.launch.py`, `dome_vision.launch.py`, `dome_voice.launch.py` and `foxglove.launch.py`. Each did little more than `bl.include(...)` another package's file. Some also read `DOME_MODE`.
 
-## dome_control: Mode-Aware Control Delegation
-
-Control is the one subsystem that has a meaningful mode distinction: the robot can run
-locally (`robot.launch.py`) or remotely (`remote.launch.py`). That choice is expressed
-once, at module level, via `DOME_MODE`.
+F05 deleted all four. **`robot.launch.py`'s table now names the package files directly:**
 
 ```python
-MODE = os.environ.get("DOME_MODE", "robot")
-
-@launch_this(ui=True)
-def start_nav():
-    bl = BetterLaunch()
-    launch_file = "remote.launch.py" if MODE == "remote" else "robot.launch.py"
-    bl.include("dome_control", launch_file)
+LAUNCH_FILES = {
+    "drivers": ("dome2", "gendrv.launch.py"),
+    "control": ("dome_control", "robot.launch.py"),
+    "vision": ("dome_vision_ros", "robot.launch.py"),
+    "voice": ("dome_voice", "robot.launch.py"),
+    "foxglove": ("foxglove_bridge", "foxglove_bridge_launch.xml"),
+    "battery": ("dome_telemetry", "robot.launch.py"),
+    "yellow": ("yellow_pad", "yellow_pad.launch.py"),
+}
 ```
 
-The ternary replaces the old `if/else` block. Because `MODE` is read once at import time
-(a module-level constant), there is no risk of the environment changing between the check
-and the `bl.include` call.
+### Why the wrappers went
 
-## dome_vision and dome_voice: Unconditional Wrappers
+- **They added a hop and nothing else.** Reading a wrapper told you nothing the table couldn't.
+- **They hid mode logic.** `DOME_MODE` checks were spread over several files. With one table per computer, the check isn't needed.
+- **They made each package's file name a second time.** Every rename had to be made twice.
 
-Vision and voice previously included mode guards (`DOME_MODE`, `DOME_CAMERA`). Those
-guards were removed because the top-level orchestrator now decides whether to include
-a subsystem at all. A wrapper that does nothing but `bl.include(…)` is still useful: it
-gives the subsystem a stable ROS2 entry point that the orchestrator can reference by name.
+## What each subsystem starts
 
-```python
-# dome_vision.launch.py
-@launch_this(ui=True)
-def start_nav():
-    bl = BetterLaunch()
-    bl.include("dome_vision_ros", "robot.launch.py")
+| Token | Starts | Config |
+|---|---|---|
+| `drivers` | `linorobot2_bringup`: micro-ROS agent, EKF, `robot_state_publisher` (chapter 2) | `dome3.urdf`, `ekf.yaml` in dome2 |
+| `control` | `behavior_manager`, `telemetry`, `spin_survey` | `spin_survey.yaml` in dome_control |
+| `vision` | `dome_vision`, a lifecycle node driven to `active` | `roboflow_oak.yaml` in dome_vision_ros |
+| `voice` | `voice_input`, `speech_output` | `voice.yaml` in dome_voice |
+| `foxglove` | the Foxglove WebSocket bridge, on port 8765 | the bridge's defaults |
+| `battery` | battery telemetry | in dome_telemetry |
+| `yellow` | Yellow Pad joystick teleop | in yellow_pad |
+
+**Each package finds its own config** with `bl.find`, per `stack/config_conventions.md`. dome2 passes none of these paths.
+
+### Two entries worth a note
+
+- **`foxglove` includes the bridge's XML launch file directly.** The old wrapper passed `port="8765"`, which is the bridge's own default, so nothing is lost.
+- **`control` includes `spin_survey`.** It sits idle until something calls `/survey/start`; dome_control's command-line `survey` command is the only caller. It can still publish `/cmd_vel` once started, like any controller.
+
+## Selecting them
+
+Tokens are unique prefixes of these names (chapter 4):
+
+```bash
+bl dome2 robot.launch.py --options "d c"     # drivers + control
+bl dome2 robot.launch.py --options "d vi"    # drivers + vision
+bl dome2 robot.launch.py --options "vo"      # voice alone
 ```
 
-```python
-# dome_voice.launch.py
-@launch_this(ui=True)
-def start_nav():
-    bl = BetterLaunch()
-    bl.include("dome_voice", "robot.launch.py")
+Each package's file also runs on its own, which is the fastest way to test one subsystem:
+
+```bash
+bl dome_vision_ros robot.launch.py --depth false
 ```
 
-## gendrv: Hardware Driver Bringup
+## Observations
 
-`gendrv.launch.py` brings up the physical robot: URDF, EKF config, serial port to the
-ESP32 microcontroller, and the linorobot2 bringup stack.
-
-```python
-@launch_this(ui=True)
-def start_nav():
-    bl = BetterLaunch()
-    urdf_path = bl.find("dome2", "dome3.urdf")
-    ekf_config_path = bl.find("dome2", "ekf.yaml")
-    bl.include(
-        "linorobot2_bringup",
-        "bringup.launch.py",
-        rviz=False,
-        sim=False,
-        base_serial_port="/dev/esp32",
-        micro_ros_baudrate="921600",
-        madgwick="false",
-        orientation_stddev="0.01",
-        joy="false",
-        urdf=urdf_path,
-        ekf_config_path=ekf_config_path,
-    )
-```
-
-The explicit keyword arguments serve as documentation of the non-default choices: no
-RViz, no simulation, no joystick, no Madgwick filter. These are robot-specific policy
-decisions that should be visible at a glance.
-
-## Design Observations
-
-- **Mode gating moved up.** The old pattern of each wrapper checking `DOME_MODE` before
-  deciding to do anything created duplicated conditional logic and made the overall
-  launch profile impossible to reason about in one place. Moving selection to
-  `robot.launch.py` is cleaner.
-- **`gendrv` is the one file with real config.** If hardware params change (port, baud
-  rate, URDF path), this is the only file that needs updating.
-- **`start_nav` naming is inherited.** All four files use `start_nav` as the function
-  name even though most don't navigate. This is a `better_launch` convention; changing
-  it would break the launcher decorator.
+1. **One file per package is now the only way in.** Variants (raw images, experiment setups) are arguments of that file, not extra files.
+2. **Subsystem arguments can't be set from dome2 yet.** `bl dome2 robot.launch.py` has no way to pass `--depth false` through to vision. TF05.4 adds pass-through for `--sim_time` and `--map_name`.
+3. **Startup isn't sequenced.** Every selected subsystem starts at once, so the OAK's highest current draw coincides with every other node's startup (dome_vision I02).

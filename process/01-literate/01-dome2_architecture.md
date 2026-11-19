@@ -1,21 +1,19 @@
 ---
-version: "1.0"
-generated: "2026-05-12"
+version: "2.0"
+generated: "2026-11-19"
 ---
 
-# dome2: A Meta-Package and the BetterLaunch Abstraction
+# dome2: A Meta-Package and the better_launch Abstraction
 
 ## What dome2 Is
 
-`dome2` is not a ROS2 node package — it contains no nodes, no publishers, no subscribers. Its sole purpose is **orchestration**: it holds the launch files that bring the robot's subsystems to life in the right combination, with the right configuration.
+`dome2` contains no publishers, subscribers or nodes. It is **orchestration**: launch files that bring the robot's subsystems up in the right combination.
 
-Think of it as the conductor of an orchestra. The musicians (nodes) live in `dome_control`, `dome_voice`, `dome_vision_ros`, and `linorobot2_bringup`. `dome2` decides which musicians play, when, and with what sheet music.
+Think of it as a conductor. The musicians (nodes) live in `dome_control`, `dome_vision_ros`, `dome_voice` and the rest. dome2 decides which of them play.
 
-## The BetterLaunch Abstraction
+## better_launch
 
-Raw ROS2 launch files are verbose Python — you construct `LaunchDescription` objects, chain `IncludeLaunchDescription` actions, resolve paths manually. `dome2` uses a thin wrapper library called `better_launch` that hides this ceremony.
-
-Every launch file in `dome2` follows the same three-line pattern:
+Stock ROS 2 Python launch files are ceremony: `LaunchDescription`, `DeclareLaunchArgument`, `IncludeLaunchDescription`, substitutions. DOME uses **better_launch**, where a launch file is a decorated function:
 
 ```python
 from better_launch import BetterLaunch, launch_this
@@ -23,74 +21,72 @@ from better_launch import BetterLaunch, launch_this
 @launch_this(ui=True)
 def start_nav():
     bl = BetterLaunch()
-    bl.include("some_package", "some.launch.py", arg=value)
+    bl.include("dome_control", "robot.launch.py")
 ```
 
-The `@launch_this` decorator transforms `start_nav()` into a valid ROS2 launch description. The `ui=True` flag enables a terminal UI that shows node status during launch — useful for debugging startup failures without scrolling through log spam.
+- **`@launch_this`** turns the function into the launch entry point. Its **signature is the command line**: each parameter becomes a `--flag`.
+- **`ui=True`** brings up a terminal UI that shows each node's state and lets you stop the launch.
+- **`bl.include(package, file, **kwargs)`** includes another launch file. Python, XML and YAML launch files all work, which is how dome2 includes `foxglove_bridge_launch.xml` directly.
+- **`bl.find(package, file)`** resolves a file in a package's installed `share/` directory.
 
-`BetterLaunch` provides two key methods:
+### A constraint that shapes every signature
 
-- **`bl.include(package, launch_file, **kwargs)`** — includes another launch file by ROS2 package name and filename, passing keyword arguments as launch arguments. This replaces several lines of path resolution and `IncludeLaunchDescription` boilerplate.
-- **`bl.find(package, filename)`** — resolves the installed path of a file within a ROS2 package's `share/` directory. Used when a downstream launch file needs an explicit path rather than a package reference.
+better_launch reads the arguments by **parsing the source**, not by running it. Defaults must therefore be literals, and annotations must be types click can build an option from. Chapter 4 shows how the launchers work around that.
 
-## DOME_MODE: Robot vs Remote
-
-A recurring pattern across all launch files is the `DOME_MODE` environment variable:
-
-```python
-mode = os.environ.get("DOME_MODE", "robot")
-```
-
-This variable controls which hardware profile the robot runs. Two modes exist:
-
-| Mode | Meaning |
-|------|---------|
-| `robot` | Running directly on the robot hardware (Raspberry Pi) |
-| `remote` | Running on a remote machine, controlling the robot over the network |
-
-The default is `robot` — if the variable is unset, assume you're on the hardware. This is a deliberate safe default: forgetting to set `DOME_MODE=remote` on a dev laptop means you get a failed launch (missing hardware) rather than silently running in a degraded mode that looks like it's working.
-
-Each subsystem interprets `DOME_MODE` independently, which allows selective subsystem launches. Voice, for instance, enforces that it only runs in `robot` mode:
-
-```python
-if not (mode == "robot"):
-    print("Robot mode required because voice control is only onboard. Exiting")
-```
-
-This isn't a hard crash — it's a print and implicit no-op. The design assumes that including a subsystem that can't run in the current mode is not a fatal error for the overall system.
-
-## System Composition Diagram
+## Composition
 
 ```mermaid
 graph TD
-    ENV["Environment Variables<br/>DOME_MODE / DOME_CAMERA / ROBOFLOW_API_KEY"]
-    
-    robot["robot.launch.py<br/>(top-level orchestrator)"]
-    
-    gendrv["gendrv.launch.py<br/>Hardware drivers"]
-    ctrl["dome_control.launch.py<br/>Control subsystem"]
-    voice["dome_voice.launch.py<br/>Voice subsystem"]
-    vision["dome_vision.launch.py<br/>Vision subsystem"]
-    fox["foxglove.launch.py<br/>Monitoring bridge"]
-    
+    ENV["Profile variables<br/>DOME_PROFILE → $robot"]
+    robot["dome2 robot.launch.py<br/>LAUNCH_FILES"]
+    remote["dome2 remote.launch.py<br/>LAUNCH_FILES"]
+
+    gendrv["dome2 gendrv.launch.py"]
     lino["linorobot2_bringup<br/>bringup.launch.py"]
-    dc["dome_control<br/>robot.launch.py or remote.launch.py"]
-    dv["dome_voice<br/>robot.launch.py"]
+    dc["dome_control<br/>robot.launch.py"]
     dvr["dome_vision_ros<br/>robot.launch.py"]
-    foxb["foxglove_bridge<br/>foxglove_bridge_launch.xml"]
-    
+    dv["dome_voice<br/>robot.launch.py"]
+    fox["foxglove_bridge<br/>foxglove_bridge_launch.xml"]
+    tel["dome_telemetry<br/>robot.launch.py"]
+    yp["yellow_pad<br/>yellow_pad.launch.py"]
+    viz["dome_viz<br/>remote.launch.py"]
+
     ENV --> robot
-    robot --> gendrv
-    robot --> ctrl
-    robot --> voice
-    robot --> vision
+    robot --> gendrv --> lino
+    robot --> dc
+    robot --> dvr
+    robot --> dv
     robot --> fox
-    
-    gendrv --> lino
-    ctrl --> dc
-    voice --> dv
-    vision --> dvr
-    fox --> foxb
+    robot --> tel
+    robot --> yp
+    remote --> viz
 ```
 
-Each `dome2` launch file is a thin delegation layer — it reads the environment, validates preconditions, then hands off to the actual subsystem package. This keeps subsystem complexity inside the subsystem, and keeps `dome2` focused on wiring.
+Each arrow from a launcher is one row of its `LAUNCH_FILES` table. **Only one of the targets is a dome2 file**: the driver bringup, because dome2 owns that configuration.
+
+## Robot versus remote
+
+There used to be one launcher and a `DOME_MODE` environment variable. Each wrapper read it and decided what to do on which computer.
+
+Now **the launcher is the mode**:
+
+- `robot.launch.py` lists what runs on the Pi.
+- `remote.launch.py` lists what runs on the remote computer.
+
+A subsystem that can't run on a computer simply isn't in that computer's table. There is no variable to forget and no guard to keep in sync.
+
+## Where things are checked
+
+`test/test_launch_conventions.py` enforces the convention across every DOME package checked out next to dome2:
+
+- the file header, usage lines and docstrings
+- literal defaults
+- no cross-package includes outside dome2
+- every `LAUNCH_FILES` target exists
+- no doc mentions a deleted launch file
+
+## Observations
+
+1. **The tables depend on other packages' file names.** Renaming a package's launch file breaks dome2. The existence test catches it, but only for packages checked out on that computer.
+2. **`gendrv` doesn't yet follow the naming convention.** TF05.4 renames it to `drivers.launch.py`, matching its subsystem name.
+3. **Launch arguments don't pass through yet.** `--sim_time` and `--map_name` can't reach a subsystem from dome2 (TF05.4).

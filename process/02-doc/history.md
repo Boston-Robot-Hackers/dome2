@@ -3,6 +3,24 @@
 Archived entries from `current.md`'s Recent completions, oldest work moved
 here to keep `current.md` focused on what's recent and relevant.
 
+- 2026-11-19: F05 TF05.3 deletions, F07 config convention, dome_voice F02.
+  - **TF05.3:** deleted the four dome2 wrappers (`LAUNCH_FILES` now names
+    each package's file directly), `remote.launch.py` in dome_control,
+    dome_voice and dome_vision, `dome_vision_ros.launch.py`, and dome_nav's
+    three experiment files. The power test's `oak` stage now runs vision's
+    `robot.launch.py`. **Robot test passed** for `d c`, `d vi`, `d vo` and `d f`.
+  - **F07 (`stack/config_conventions.md`):** config is `<pkg>/config/<subject>.yaml`,
+    passed by the launch file via `bl.find`. No config-path env vars:
+    `DOME_VISION_CONFIG` and `DOME_VOICE_CONFIG` were removed from the nodes
+    and from `rosutils`. The tmux server had kept the old values.
+  - **dome_voice TF05.2 and F02:** `robot.launch.py` converted; the tuned
+    table that the YAML had silently replaced is gone, and `voice.yaml` now
+    holds every robot value under a strict pydantic model. The voice runtime
+    isn't installed on the Pi, so only the config path was verified there.
+  - **`--symlink-install`** is now the build command. dome2, dome_control,
+    dome_nav, dome_voice and dome_vision_ros were rebuilt clean with it.
+  - dome2's literate docs 00 to 04 were rewritten for the direct entries;
+    X01 (foxglove wrapper) was deleted.
 - 2026-11-19: F05 TF05.2, dome_viz.
   - **`view.launch.py` became `remote.launch.py`**, with entry function
     `remote_launch` (TF05.1 decision 1). Updated: dome_viz's Makefile, test,

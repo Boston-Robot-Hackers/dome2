@@ -1,5 +1,5 @@
 ---
-version: "1.5"
+version: "1.6"
 generated: "2026-11-19"
 ---
 
@@ -42,8 +42,10 @@ Each launcher declares one **ordered dict** from subsystem name to `(package, la
 ```python
 LAUNCH_FILES = {
     "drivers": ("dome2", "gendrv.launch.py"),
-    "control": ("dome2", "dome_control.launch.py"),
-    ...
+    "control": ("dome_control", "robot.launch.py"),
+    "vision": ("dome_vision_ros", "robot.launch.py"),
+    "voice": ("dome_voice", "robot.launch.py"),
+    "foxglove": ("foxglove_bridge", "foxglove_bridge_launch.xml"),
     "battery": ("dome_telemetry", "robot.launch.py"),
     "yellow": ("yellow_pad", "yellow_pad.launch.py"),
 }
@@ -59,7 +61,7 @@ LAUNCH_FILES = {
 
 `SUBSYSTEMS` is **derived** from the dict instead of being a second hand-kept list. Dict insertion order (guaranteed since Python 3.7) gives the prompt order and the include order, so adding a subsystem is now one line.
 
-A few entries point **straight at other packages' launch files** instead of a thin `dome2` wrapper (chapter 3):
+Since 2026-11-19, **every entry but `drivers` points straight at another package's launch file**; the dome2 wrappers are gone (chapter 3). These were the first to do so:
 
 - **`battery`** and **`yellow`** on the robot, so each can be toggled on its own. `--options "d b"` gives drivers plus battery telemetry.
 - **`viz`** on the remote, which uses `dome_viz`'s own `remote.launch.py` unchanged.

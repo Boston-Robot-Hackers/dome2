@@ -29,7 +29,7 @@ The `Makefile` holds the app's user-facing targets (`make help` lists them).
 Development commands run through `uv` from the repo root: `uv run pytest`
 (tests) and `uv run ruff format` / `uv run ruff check` — on changed files
 only, never the whole repo. The package itself is built with
-`colcon build --packages-select dome2` from `~/ros2_ws` and launched with
+`colcon build --symlink-install --packages-select dome2` from `~/ros2_ws` and launched with
 `bl dome2 robot.launch.py`.
 
 ## Session Start

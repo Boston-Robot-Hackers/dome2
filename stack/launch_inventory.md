@@ -109,7 +109,7 @@ Experiments.
 | File | Starts | Args | Last change | Status | Proposed |
 |---|---|---|---|---|---|
 | `robot.launch.py` | `voice_input`, `speech_output` | 5 args with `os.environ.get(...)` defaults | 2026-05-14 | **Fail**: E2b. `openwakeword` is missing and the voice board is out. | **keep but park**. It is the only voice launch file. Fix the defaults to literals. Re-test when the board is back. |
-| `remote.launch.py` | `voice_input` | none | 2026-05-11 | None recorded | **delete**. The registry says `dome_voice` runs on the robot. |
+| `remote.launch.py` | `llm_node` (Whisper, Claude) | none | 2026-11-20 | New in dome_voice F14 | **keep**. The LLM command path's VM side; `voice` in dome2's `remote.launch.py`. |
 
 ## Summary of proposals
 

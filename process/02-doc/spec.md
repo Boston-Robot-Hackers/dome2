@@ -38,7 +38,7 @@ on both the robot and the remote computer.
 | dome_telemetry_msgs | both | `BatteryStats` / `OakStats` messages |
 | dome_vision | robot | OAK-D object detection and its ROS bridge |
 | dome_viz | remote | Read-only web view of the map as it is built |
-| dome_voice | robot | Wake word, offline STT, intent mapping, speech output |
+| dome_voice | both | Wake word, STT, intent mapping, speech output on the robot; the LLM node (Whisper, Claude) on the remote |
 
 dome2 also launches non-DOME packages: `linorobot2_bringup` (base driver and
 EKF), `foxglove_bridge` and `yellow_pad`. They are not in the registry.

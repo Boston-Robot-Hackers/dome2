@@ -88,7 +88,7 @@ source install/setup.bash
 bl dome2 robot.launch.py --options "d c vi"   # drivers + control + vision
 bl dome2 robot.launch.py --options "d f"      # drivers + Foxglove bridge
 bl dome2 robot.launch.py                      # subsystems from $DOME_PROFILE
-bl dome2 remote.launch.py --options "v"       # on the remote computer: the viewer
+bl dome2 remote.launch.py --options "vi vo"  # on the remote computer: the viewer and the LLM node
 ```
 
 ## Config files

@@ -41,4 +41,4 @@ packages:
     runs_on: remote
   - name: dome_voice
     repo: git@github.com:Boston-Robot-Hackers/dome_voice.git
-    runs_on: robot
+    runs_on: both

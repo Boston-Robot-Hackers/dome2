@@ -7,7 +7,7 @@ This folder holds what is true of the DOME stack as a whole, robot and remote. E
 ## Two computers
 
 - **The robot**: a Raspberry Pi 5 running ROS 2 Kilted (`/opt/ros/kilted`). It runs the drivers, control, navigation, mission, perception, voice and telemetry. It has little CPU to spare.
-- **The remote computer**: an Ubuntu VM in VMware on the Mac mini, on the same Wi-Fi DDS network (bridged networking). For now it runs only `dome_viz`. Work that doesn't have to be on the robot should move here over time.
+- **The remote computer**: an Ubuntu VM in VMware on the Mac mini, on the same Wi-Fi DDS network (bridged networking). It runs `dome_viz` and dome_voice's LLM node (F14). Work that doesn't have to be on the robot should move here over time.
 
 dome2 is checked out on both. **Both computers keep every DOME package checked out**, whichever computer it runs on.
 
@@ -40,7 +40,7 @@ Each package keeps its spec and session handoff in its own repo. Older packages 
 | `dome_telemetry_msgs` | both | none (interfaces only: `BatteryStats`, `OakStats`) |
 | `dome_vision` | robot | `process/02-doc/` |
 | `dome_viz` | remote | `process/02-doc/` |
-| `dome_voice` | robot | `02-doc/` |
+| `dome_voice` | both | `02-doc/` |
 
 All of them sit side by side in the workspace `src/` directory (`~/ros2_ws/src/<package>`).
 

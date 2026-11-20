@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # test_launch_profiles.py — tests for the launchers' profile and token logic
 # Author: Pito Salas and Claude Code
-# Version: 6
+# Version: 7
 # Created: 2026-11-16
-# Updated: 2026-11-19
+# Updated: 2026-11-20
 # Open Source Under MIT license
 
 import ast
@@ -148,12 +148,21 @@ class TestRobotLaunch:
 
 
 class TestRemoteLaunch:
-    def test_viz_is_the_only_subsystem(self, remote_launch):
-        assert remote_launch.SUBSYSTEMS == ["viz"]
+    def test_remote_subsystems_are_viz_and_voice(self, remote_launch):
+        assert remote_launch.SUBSYSTEMS == ["viz", "voice"]
         assert remote_launch.LAUNCH_FILES["viz"] == ("dome_viz", "remote.launch.py")
+        assert remote_launch.LAUNCH_FILES["voice"] == (
+            "dome_voice",
+            "remote.launch.py",
+        )
 
-    def test_v_resolves_to_viz(self, remote_launch):
-        assert resolve_tokens("v", remote_launch.SUBSYSTEMS) == ["viz"]
+    def test_vi_and_vo_resolve(self, remote_launch):
+        assert resolve_tokens("vi vo", remote_launch.SUBSYSTEMS) == ["viz", "voice"]
+
+    def test_v_alone_is_ambiguous_on_remote(self, remote_launch, caplog):
+        with caplog.at_level(logging.WARNING):
+            assert resolve_tokens("v", remote_launch.SUBSYSTEMS) == []
+        assert caplog.records
 
     def test_robot_token_is_unknown_on_remote(self, remote_launch, caplog):
         with caplog.at_level(logging.WARNING):

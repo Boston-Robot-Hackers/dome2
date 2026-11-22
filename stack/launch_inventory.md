@@ -78,6 +78,16 @@ Experiments.
 | `nav2_experiment_navigation.launch.py` | Trimmed copy of `nav2_bringup`'s `navigation_launch.py` | ROS launch args | 2026-07-16 | **Plain ROS launch file**, which breaks the better_launch rule. Cut idle load from 5.46 to 1.07. | **delete** with `nav_experiment`. Record the trimmed `lifecycle_nodes` list in I13 first. |
 | `just_explorer.launch.py` | `explorer_manager_node` alone | `map_name`, `use_sim_time`, 12 tunings | 2026-07-30 | Debug tool for F31 (`simhowto.md`) | **delete** (decided 2026-11-17). F06 makes the explorer its own stage, selectable with `--options`, and moves its tunings into params YAML files chosen by one argument. |
 
+## dome_pad (2 files)
+
+Added 2026-11-22 (F09), after the inventory above was taken. dome_pad was
+`yellow_pad`, whose `yellow_pad.launch.py` (plain ROS launch) is deleted.
+
+| File | Starts | Args | Last change | Status | Proposed |
+|---|---|---|---|---|---|
+| `robot.launch.py` | `joy_node`, `teleop_twist_joy` with `config/pad.yaml` | none | 2026-11-22 | Not run yet. Same nodes and config as `yellow_pad.launch.py`, which passed E2d (`d y`). | **keep**. `pad` in dome2's `robot.launch.py`. |
+| `remote.launch.py` | rosbridge, `pad_buttons` | none | 2026-11-22 | Not run yet (F09 demo) | **keep**. `pad` in dome2's `remote.launch.py`. |
+
 ## dome_semantic (1 file)
 
 | File | Starts | Args | Last change | Status | Proposed |

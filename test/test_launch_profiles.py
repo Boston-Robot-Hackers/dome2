@@ -32,7 +32,7 @@ ROBOT_SUBSYSTEMS = [
     "voice",
     "foxglove",
     "battery",
-    "yellow",
+    "pad",
 ]
 
 
@@ -49,7 +49,7 @@ class TestResolveTokens:
         assert robot_tokens("c") == ["control"]
         assert robot_tokens("f") == ["foxglove"]
         assert robot_tokens("b") == ["battery"]
-        assert robot_tokens("y") == ["yellow"]
+        assert robot_tokens("p") == ["pad"]
 
     def test_disambiguating_prefix(self):
         assert robot_tokens("vi") == ["vision"]
@@ -144,20 +144,28 @@ class TestRobotLaunch:
         assert robot_launch.SUBSYSTEMS == ROBOT_SUBSYSTEMS
 
     def test_every_token_prefix_resolves(self, robot_launch):
-        assert robot_tokens("d sl c vi se vo f b y") == robot_launch.SUBSYSTEMS
+        assert robot_tokens("d sl c vi se vo f b p") == robot_launch.SUBSYSTEMS
+
+    def test_pad_runs_dome_pads_robot_file(self, robot_launch):
+        assert robot_launch.LAUNCH_FILES["pad"] == ("dome_pad", "robot.launch.py")
 
 
 class TestRemoteLaunch:
-    def test_remote_subsystems_are_viz_and_voice(self, remote_launch):
-        assert remote_launch.SUBSYSTEMS == ["viz", "voice"]
+    def test_remote_subsystems_are_viz_voice_and_pad(self, remote_launch):
+        assert remote_launch.SUBSYSTEMS == ["viz", "voice", "pad"]
         assert remote_launch.LAUNCH_FILES["viz"] == ("dome_viz", "remote.launch.py")
         assert remote_launch.LAUNCH_FILES["voice"] == (
             "dome_voice",
             "remote.launch.py",
         )
+        assert remote_launch.LAUNCH_FILES["pad"] == ("dome_pad", "remote.launch.py")
 
-    def test_vi_and_vo_resolve(self, remote_launch):
-        assert resolve_tokens("vi vo", remote_launch.SUBSYSTEMS) == ["viz", "voice"]
+    def test_vi_vo_and_p_resolve(self, remote_launch):
+        assert resolve_tokens("vi vo p", remote_launch.SUBSYSTEMS) == [
+            "viz",
+            "voice",
+            "pad",
+        ]
 
     def test_v_alone_is_ambiguous_on_remote(self, remote_launch, caplog):
         with caplog.at_level(logging.WARNING):

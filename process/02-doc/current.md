@@ -2,7 +2,21 @@
 
 ## Open
 
-### Pick up here (2026-11-19)
+### Pick up here (2026-11-22)
+
+**F09 in progress: the Yellow Pad as `dome_pad`.** New repo
+`Boston-Robot-Hackers/dome_pad` (was `yellow_pad`), registered here; `pad`
+subsystem on both launchers; button A asks dome_voice's LLM for a robot
+joke. Code, unit tests and docs are done (TF09.0-TF09.5). **TF09.6 is
+next: build and run on the Pi and the VM.** dome2's changes aren't
+committed. See TF09.
+
+- **The Mac's test run here** has 23 failures that come from stale checkouts
+  next to dome2 (dome_control, dome_voice, dome_telemetry behind origin;
+  dome_viz not cloned). Identical before and after F09. Run the suite on
+  the VM after `make pull`.
+
+### Before that (2026-11-19)
 
 **Checkpointed dome2.** Details are in `history.md`, TF05 and F08.
 
@@ -49,8 +63,8 @@
   steps fail. Use `/usr/bin/python3 -m pytest`. For ruff, use
   `~/.local/bin/ruff` on the VM and
   `~/ros2_ws/src/dome_vision/.ruff-venv/bin/ruff` on the Pi.
-- `package.xml` exec-depends on `yellow_pad` and `dome_telemetry`, which
-  aren't on the remote computer. `rosdep install` there will complain;
+- `package.xml` exec-depends on `dome_telemetry`, which isn't on the
+  remote computer. `rosdep install` there will complain;
   `colcon build` won't.
 
 ### Blocked

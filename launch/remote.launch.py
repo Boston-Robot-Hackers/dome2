@@ -11,15 +11,16 @@
 #   bl dome2 remote.launch.py --options "vi"         # dome_viz map view
 #   bl dome2 remote.launch.py --options "vo"         # dome_voice LLM node (Whisper + Claude)
 #   bl dome2 remote.launch.py --options "vi vo"      # both
+#   bl dome2 remote.launch.py --options "vo p"       # LLM node + Yellow Pad (rosbridge, buttons)
 #   bl dome2 remote.launch.py --options "vi" --sim_time True  # bag replay or simulator
 #   bl dome2 remote.launch.py --is_interactive       # confirm each subsystem
 """Remote-computer counterpart of `robot.launch.py`, with the same interface.
 
-Subsystems that run off the robot are listed here: dome_viz's map view, and
-dome_voice's LLM node (F14). `v` alone is ambiguous between them; use `vi`
-or `vo`. `sim_time` isn't
-used here: better_launch passes it to every included file that declares it
-(`dome_viz`).
+Subsystems that run off the robot are listed here: dome_viz's map view,
+dome_voice's LLM node (F14), and dome_pad's rosbridge and button node (F09).
+`v` alone is ambiguous between viz and voice; use `vi` or `vo`. `sim_time`
+isn't used here: better_launch passes it to every included file that
+declares it (`dome_viz`).
 """
 
 import os
@@ -32,6 +33,7 @@ from dome2.subsystem_launcher import launch_subsystems
 LAUNCH_FILES = {
     "viz": ("dome_viz", "remote.launch.py"),
     "voice": ("dome_voice", "remote.launch.py"),
+    "pad": ("dome_pad", "remote.launch.py"),
 }
 
 SUBSYSTEMS = list(LAUNCH_FILES)
@@ -49,7 +51,8 @@ def remote_launch(
     """Launch remote-side subsystems by profile, token string, or interactively.
 
     Subsystems (use any unambiguous prefix): viz (dome_viz live map view),
-    voice (dome_voice LLM node: Whisper and Claude).
+    voice (dome_voice LLM node: Whisper and Claude), pad (rosbridge for the
+    Yellow Pad's ROS tab, and pad_buttons: A asks the LLM for a robot joke).
 
     Parameters
     ----------

@@ -9,7 +9,7 @@
 
   <depend>linorobot2_description</depend>
   <exec_depend>dome_telemetry</exec_depend>
-  <exec_depend>yellow_pad</exec_depend>
+  <exec_depend>dome_pad</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
   <exec_depend>python3-click</exec_depend>
 

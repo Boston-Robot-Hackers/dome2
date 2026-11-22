@@ -31,7 +31,7 @@ def real_packages():
 
 class TestRealRegistry:
     def test_loads_all_packages(self, real_packages):
-        assert len(real_packages) == 12
+        assert len(real_packages) == 13
         assert real_packages[0].name == "dome2"
 
     def test_runs_on_values(self, real_packages):

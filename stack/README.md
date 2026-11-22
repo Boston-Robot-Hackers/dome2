@@ -34,6 +34,7 @@ Each package keeps its spec and session handoff in its own repo. Older packages 
 | `dome_mission` | robot | `02-doc/` |
 | `dome_nav` | robot | `02-doc/` |
 | `dome_nav_msgs` | robot | none (interfaces only: `ExploreArea` action) |
+| `dome_pad` | both | `process/02-doc/` |
 | `dome_semantic` | both | `process/02-doc/` |
 | `dome_semantic_msgs` | both | none (interfaces only: `SemanticTarget`, `SemanticTargetArray`) |
 | `dome_telemetry` | robot | `02-doc/` |
@@ -46,8 +47,8 @@ All of them sit side by side in the workspace `src/` directory (`~/ros2_ws/src/<
 
 ## Launching
 
-- **Robot**: `bl dome2 robot.launch.py --options "d c vi"`. Subsystems: drivers, slam, control, vision, semantic, voice, foxglove, battery, yellow. `--map_name` and `--sim_time` pass through to the files that take them. The Nav2 modes are launched separately from `dome_nav`.
-- **Remote**: `bl dome2 remote.launch.py --options "v"`. Subsystems: viz.
+- **Robot**: `bl dome2 robot.launch.py --options "d c vi"`. Subsystems: drivers, slam, control, vision, semantic, voice, foxglove, battery, pad. `--map_name` and `--sim_time` pass through to the files that take them. The Nav2 modes are launched separately from `dome_nav`.
+- **Remote**: `bl dome2 remote.launch.py --options "vi vo p"`. Subsystems: viz, voice, pad.
 
 Both take `--profile <env var>` (defaults `$DOME_PROFILE` / `$DOME_REMOTE_PROFILE`) and `--is_interactive`.
 
@@ -64,9 +65,9 @@ Both keep going past a failure, list every failure at the end, and exit nonzero 
 ## Setting up the remote computer
 
 1. Clone dome2 into the workspace: `git clone git@github.com:Boston-Robot-Hackers/dome2.git ~/ros2_ws/src/dome2`.
-2. Run `make clone` in `~/ros2_ws/src/dome2`. It clones the other 11 packages next to dome2.
+2. Run `make clone` in `~/ros2_ws/src/dome2`. It clones the other 12 packages next to dome2.
 3. From `~/ros2_ws`, run `colcon build --symlink-install`, then `source install/setup.bash`. With `--symlink-install`, edits to a package's `config/` take effect without a rebuild ([`config_conventions.md`](config_conventions.md)).
-4. Run `bl dome2 remote.launch.py --options "v"`.
+4. Run `bl dome2 remote.launch.py --options "vi"` (or `"vi vo p"` for the LLM node and the Yellow Pad too).
 
 ## Other stack-wide docs
 

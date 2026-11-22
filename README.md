@@ -22,7 +22,7 @@ dome2 owns only the top-level launchers and the driver bringup. Every other subs
 | File | Purpose |
 |---|---|
 | `robot.launch.py` | The robot: chosen subsystems in one command |
-| `remote.launch.py` | The remote computer: the `viz` subsystem (dome_viz) |
+| `remote.launch.py` | The remote computer: `viz` (dome_viz), `voice` (dome_voice's LLM node), `pad` (dome_pad's rosbridge and button node) |
 | `drivers.launch.py` | Base driver + EKF + URDF state publisher (the `drivers` subsystem) |
 
 `robot.launch.py`'s subsystems, chosen with `--options` (any unambiguous prefix):
@@ -37,7 +37,7 @@ dome2 owns only the top-level launchers and the driver bringup. Every other subs
 | `voice` | `dome_voice robot.launch.py` |
 | `foxglove` | `foxglove_bridge foxglove_bridge_launch.xml` (port 8765) |
 | `battery` | `dome_telemetry robot.launch.py` |
-| `yellow` | `yellow_pad yellow_pad.launch.py` |
+| `pad` | `dome_pad robot.launch.py` (Yellow Pad: joy + teleop) |
 
 `slam` and `semantic` both start with `s`, so use `sl` and `se`.
 

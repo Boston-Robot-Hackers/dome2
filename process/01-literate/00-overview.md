@@ -20,10 +20,10 @@ The packages that do the real work:
 | `dome_semantic` | The semantic map (the `semantic` subsystem) |
 | `dome_control` | Behaviour manager, telemetry, spin survey |
 | `dome_vision_ros` | OAK-D camera and object detection |
-| `dome_voice` | Wake word, speech input and speech output |
+| `dome_voice` | Wake word, speech input and speech output; the LLM node on the remote computer |
 | `foxglove_bridge` | WebSocket bridge for Foxglove on the remote computer |
 | `dome_telemetry` | Battery telemetry |
-| `yellow_pad` | Joystick teleop |
+| `dome_pad` | Yellow Pad gamepad: joystick teleop on the robot; rosbridge and button actions on the remote computer |
 | `dome_viz` | Live map view, on the remote computer |
 
 ## The Two-Level Rule
@@ -64,7 +64,8 @@ bl dome2 robot.launch.py
 On the remote computer:
 
 ```bash
-bl dome2 remote.launch.py --options "v"        # dome_viz map view
+bl dome2 remote.launch.py --options "vi"       # dome_viz map view
+bl dome2 remote.launch.py --options "vo p"     # LLM node + Yellow Pad (rosbridge, buttons)
 ```
 
 Connect Foxglove to `ws://<robot-ip>:8765` to see the topics live.

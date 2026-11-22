@@ -10,7 +10,7 @@
 #   bl dome2 robot.launch.py                              # use $DOME_PROFILE env var
 #   bl dome2 robot.launch.py --profile dev                # use $dev env var
 #   bl dome2 robot.launch.py --options "d c vi"           # drivers + control + vision
-#   bl dome2 robot.launch.py --options "d b y"            # drivers + battery + yellow pad
+#   bl dome2 robot.launch.py --options "d b p"            # drivers + battery + Yellow Pad
 #   bl dome2 robot.launch.py --options "d b sl vi se" --map_name <name>  # semantic mapping
 #   bl dome2 robot.launch.py --is_interactive             # confirm each subsystem
 #
@@ -41,7 +41,7 @@ LAUNCH_FILES = {
     "voice": ("dome_voice", "robot.launch.py"),
     "foxglove": ("foxglove_bridge", "foxglove_bridge_launch.xml"),
     "battery": ("dome_telemetry", "robot.launch.py"),
-    "yellow": ("yellow_pad", "yellow_pad.launch.py"),
+    "pad": ("dome_pad", "robot.launch.py"),
 }
 
 SUBSYSTEMS = list(LAUNCH_FILES)
@@ -60,7 +60,7 @@ def robot_launch(
     """Launch dome2 subsystems by profile, token string, or interactively.
 
     Subsystems (use any unambiguous prefix): drivers, slam, control, vision,
-    semantic, voice, foxglove, battery (battery telemetry), yellow (Yellow Pad
+    semantic, voice, foxglove, battery (battery telemetry), pad (Yellow Pad
     joystick teleop). Example: "d c vi" = drivers + control + vision.
 
     Parameters

@@ -50,8 +50,10 @@ graph TD
     dv["dome_voice<br/>robot.launch.py"]
     fox["foxglove_bridge<br/>foxglove_bridge_launch.xml"]
     tel["dome_telemetry<br/>robot.launch.py"]
-    yp["yellow_pad<br/>yellow_pad.launch.py"]
+    pad["dome_pad<br/>robot.launch.py"]
     viz["dome_viz<br/>remote.launch.py"]
+    dvl["dome_voice<br/>remote.launch.py"]
+    padr["dome_pad<br/>remote.launch.py"]
 
     ENV --> robot
     robot --> drivers --> lino
@@ -62,8 +64,10 @@ graph TD
     robot --> dv
     robot --> fox
     robot --> tel
-    robot --> yp
+    robot --> pad
     remote --> viz
+    remote --> dvl
+    remote --> padr
 ```
 
 Each arrow from a launcher is one row of its `LAUNCH_FILES` table. **Only one of the targets is a dome2 file**: the driver bringup, because dome2 owns that configuration.

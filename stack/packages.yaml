@@ -21,6 +21,9 @@ packages:
   - name: dome_nav_msgs
     repo: git@github.com:Boston-Robot-Hackers/dome_nav_msgs.git
     runs_on: robot
+  - name: dome_pad
+    repo: git@github.com:Boston-Robot-Hackers/dome_pad.git
+    runs_on: both
   - name: dome_semantic
     repo: git@github.com:Boston-Robot-Hackers/dome_semantic.git
     runs_on: both

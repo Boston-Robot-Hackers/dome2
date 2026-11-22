@@ -10,7 +10,7 @@ generated: "2026-11-19"
 dome2 has **two top-level launchers**, one per computer:
 
 - **`robot.launch.py`** runs on the Pi and brings up drivers, SLAM, control, vision, the semantic map, voice, foxglove, battery telemetry and the Yellow Pad.
-- **`remote.launch.py`** runs on the remote computer (the VM on the Mac mini). For now it brings up only `dome_viz`'s map view.
+- **`remote.launch.py`** runs on the remote computer (the VM on the Mac mini). It brings up `dome_viz`'s map view, dome_voice's LLM node, and the Yellow Pad's remote side (rosbridge and the button node).
 
 Both decide *which* subsystems to start from a **profile** (an environment variable naming a token string), a direct **`--options`** override, or **interactive** yes/no confirmation. They share all of that logic, so each launcher is little more than a table.
 
@@ -21,7 +21,7 @@ The selection policy lives in two small modules in the `dome2` Python package. T
 ```mermaid
 flowchart LR
     R[robot.launch.py<br/>LAUNCH_FILES: 7 subsystems] --> L[subsystem_launcher<br/>launch_subsystems]
-    M[remote.launch.py<br/>LAUNCH_FILES: viz] --> L
+    M[remote.launch.py<br/>LAUNCH_FILES: viz, voice, pad] --> L
     L --> O[launch_options<br/>token_string, resolve_tokens<br/>pure, no ROS]
     L --> C[click.confirm<br/>interactive only]
     L --> B[BetterLaunch.include]
@@ -48,7 +48,7 @@ LAUNCH_FILES = {
     "voice": ("dome_voice", "robot.launch.py"),
     "foxglove": ("foxglove_bridge", "foxglove_bridge_launch.xml"),
     "battery": ("dome_telemetry", "robot.launch.py"),
-    "yellow": ("yellow_pad", "yellow_pad.launch.py"),
+    "pad": ("dome_pad", "robot.launch.py"),
 }
 
 SUBSYSTEMS = list(LAUNCH_FILES)
@@ -57,14 +57,18 @@ SUBSYSTEMS = list(LAUNCH_FILES)
 ```python
 LAUNCH_FILES = {
     "viz": ("dome_viz", "remote.launch.py"),
+    "voice": ("dome_voice", "remote.launch.py"),
+    "pad": ("dome_pad", "remote.launch.py"),
 }
 ```
+
+**`pad` appears in both tables**, like `voice`: the same package has a robot half and a remote half. On the robot it is `joy_node` and `teleop_twist_joy`, because the Yellow Pad pairs over Bluetooth with the Pi and driving must not depend on the VM. On the remote it is rosbridge, for the pad's ROS tab, and `pad_buttons`, which turns button presses into requests to dome_voice's LLM node.
 
 `SUBSYSTEMS` is **derived** from the dict instead of being a second hand-kept list. Dict insertion order (guaranteed since Python 3.7) gives the prompt order and the include order, so adding a subsystem is now one line.
 
 Since 2026-11-19, **every entry but `drivers` points straight at another package's launch file**; the dome2 wrappers are gone (chapter 3). These were the first to do so:
 
-- **`battery`** and **`yellow`** on the robot, so each can be toggled on its own. `--options "d b"` gives drivers plus battery telemetry.
+- **`battery`** and **`yellow`** (now `pad`) on the robot, so each can be toggled on its own. `--options "d b"` gives drivers plus battery telemetry.
 - **`viz`** on the remote, which uses `dome_viz`'s own `remote.launch.py` unchanged.
 
 SLAM mapping is the `slam` subsystem. The Nav2 modes are still launched separately from `dome_nav`, until dome_nav I13.
@@ -86,7 +90,7 @@ def resolve_tokens(options_str: str, subsystems: list[str]) -> list[str]:
             logging.warning(...)   # ambiguous: skip
 ```
 
-Each token must match **exactly one** name. This is *unique-prefix matching*, the same idea as abbreviated command names in many shells and CLIs. The minimum unambiguous prefix depends on the table: on the robot `v` is ambiguous (vision, voice), while on the remote `v` means `viz`.
+Each token must match **exactly one** name. This is *unique-prefix matching*, the same idea as abbreviated command names in many shells and CLIs. The minimum unambiguous prefix depends on the table: `v` is ambiguous on both computers (vision and voice on the robot, viz and voice on the remote), while `p` means `pad` on both.
 
 Unknown and ambiguous tokens are **skipped with a warning** rather than raising. A typo in one token shouldn't keep the rest of the robot from starting.
 
@@ -210,6 +214,6 @@ Because the matching is by name, **a name must mean the same thing in every pack
 ## Observations
 
 - **Profile indirection is still the least obvious part.** `DOME_PROFILE` naming another variable trips people up. The exit message with its `export` hint now explains it at the moment it matters, rather than only in the launch files' header examples.
-- **Entries depend on other packages' file names.** `remote.launch.py`'s only entry relies on `dome_viz`'s `remote.launch.py` (renamed from `view.launch.py` on 2026-11-19). `test_launch_conventions.py` now checks that every `LAUNCH_FILES` target exists in the source tree, but only for packages checked out next to dome2.
-- **`package.xml` serves both computers.** It exec-depends on robot-only packages (`yellow_pad`, `dome_telemetry`), so `rosdep install` on the remote computer will complain even though nothing there needs them.
+- **Entries depend on other packages' file names.** `remote.launch.py`'s `viz` entry relies on `dome_viz`'s `remote.launch.py` (renamed from `view.launch.py` on 2026-11-19). `test_launch_conventions.py` now checks that every `LAUNCH_FILES` target exists in the source tree, but only for packages checked out next to dome2.
+- **`package.xml` serves both computers.** It exec-depends on a robot-only package (`dome_telemetry`), so `rosdep install` on the remote computer will complain even though nothing there needs them.
 - **`logging` uses the root logger** (ruff's LOG015 is waived in `ruff.toml`) because pytest's `caplog` here didn't reliably capture named loggers. A module logger would be cleaner if that is revisited.

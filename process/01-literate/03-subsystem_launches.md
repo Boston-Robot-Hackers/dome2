@@ -21,7 +21,7 @@ LAUNCH_FILES = {
     "voice": ("dome_voice", "robot.launch.py"),
     "foxglove": ("foxglove_bridge", "foxglove_bridge_launch.xml"),
     "battery": ("dome_telemetry", "robot.launch.py"),
-    "yellow": ("yellow_pad", "yellow_pad.launch.py"),
+    "pad": ("dome_pad", "robot.launch.py"),
 }
 ```
 
@@ -43,7 +43,7 @@ LAUNCH_FILES = {
 | `voice` | `voice_input`, `speech_output` | `voice.yaml` in dome_voice |
 | `foxglove` | the Foxglove WebSocket bridge, on port 8765 | the bridge's defaults |
 | `battery` | battery telemetry | in dome_telemetry |
-| `yellow` | Yellow Pad joystick teleop | in yellow_pad |
+| `pad` | Yellow Pad driving: `joy_node`, `teleop_twist_joy` | `pad.yaml` in dome_pad |
 
 **Each package finds its own config** with `bl.find`, per `stack/config_conventions.md`. dome2 passes none of these paths.
 

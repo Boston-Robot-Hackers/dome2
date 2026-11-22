@@ -32,6 +32,7 @@ on both the robot and the remote computer.
 | dome_mission | robot | Mission sequencing; owns `/intent` and composes nav primitives |
 | dome_nav | robot | SLAM, map persistence, localization, Nav2 configuration |
 | dome_nav_msgs | robot | `ExploreArea` action |
+| dome_pad | both | Yellow Pad gamepad: firmware, joy + teleop on the robot, rosbridge + button actions on the remote |
 | dome_semantic | both | Semantic map: confirmed object targets in the `map` frame |
 | dome_semantic_msgs | both | `SemanticTarget` / `SemanticTargetArray` messages |
 | dome_telemetry | robot | Battery telemetry from the INA219 UPS |
@@ -41,7 +42,7 @@ on both the robot and the remote computer.
 | dome_voice | both | Wake word, STT, intent mapping, speech output on the robot; the LLM node (Whisper, Claude) on the remote |
 
 dome2 also launches non-DOME packages: `linorobot2_bringup` (base driver and
-EKF), `foxglove_bridge` and `yellow_pad`. They are not in the registry.
+EKF) and `foxglove_bridge`. They are not in the registry.
 
 ## Key ROS interfaces
 

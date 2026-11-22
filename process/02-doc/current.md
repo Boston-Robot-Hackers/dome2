@@ -2,7 +2,26 @@
 
 ## Open
 
-### Pick up here (2026-11-22)
+### Pick up here (2026-11-22, late): the session moves to the Pi
+
+Work so far was on the Mac. **Everything is committed and pushed** (dome2,
+dome_pad, dome_voice, esp32-c6-demo). On the Pi:
+
+1. **Update the workspace:** `cd ~/ros2_ws/src/dome2 && make pull`, then
+   `cd ~/ros2_ws && colcon build --packages-select dome2 dome_pad dome_voice`
+   and `source install/setup.bash`. The Pi was seen running an older dome2
+   (a `/gendrv` node) on 2026-11-22.
+2. **Next task: dome_voice F15's TF15.2**, testing faster speech on the
+   robot. Steps are in dome_voice's `process/02-doc/current.md`.
+3. **Launch for the pad:** Pi `bl dome2 robot.launch.py --options "d c vo p"`
+   (`c` is needed for the Status key; `p` for the pad at all); VM
+   `bl dome2 remote.launch.py --options "vo p"` with `ANTHROPIC_API_KEY`.
+4. **Watch the EKF:** "Failed to meet update rate" errors (30 Hz; updates
+   took 40-300 ms) were seen with `d c vo p`. Not yet diagnosed: check
+   `top` idle vs. while the robot speaks. Candidates: `voice_input`'s
+   always-on wake word and STT, and Piper synthesis.
+
+### Earlier on 2026-11-22
 
 **F09 is done: the Yellow Pad as `dome_pad`.** New repo
 `Boston-Robot-Hackers/dome_pad` (was `yellow_pad`), registered here; `pad`

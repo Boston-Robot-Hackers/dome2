@@ -13,8 +13,8 @@ and VM. Results are in TF09 (`process/04-tasks/done/`).
 - **Run the Pi with `p`**: `bl dome2 robot.launch.py --options "d vo p"`.
   Without it there's no `joy_node`, so the pad neither drives nor sends
   button presses.
-- **Left for the user:** archive `Boston-Robot-Hackers/yellow_pad` on
-  GitHub and remove its submodule from `esp32-c6-demo`. Not done; ask first.
+- **`yellow_pad` is archived** on GitHub (its README points to dome_pad),
+  and its submodule is removed from `esp32-c6-demo` (2026-11-22).
 - **The Mac's test run here** has 23 failures that come from stale checkouts
   next to dome2 (dome_control, dome_voice, dome_telemetry behind origin;
   dome_viz not cloned). Identical before and after F09. Run the suite on

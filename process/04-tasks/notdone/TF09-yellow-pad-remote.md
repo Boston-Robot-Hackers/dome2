@@ -108,7 +108,15 @@ all from stale or missing checkouts of other packages; 7 more tests pass.
 
 ## TF09.6 — Run on the robot and the VM
 
-**Status**: not done
+**Status**: in progress
+
+**Results so far**:
+- 2026-11-22: firmware flashed (1314224 bytes, hash verified). With rosbridge
+  not yet started, the ROS tab sat at "Connecting to 192.168.4.83..."; the
+  Mac confirmed port 9090 refused. After the VM side was started, **the ROS
+  tab connects** (user), and port 9090 accepts from the Mac.
+- Still to record: driving through `pad` on the Pi, and button A
+  (`/voice/llm_text`, `/voice/llm_reply`, `/announcement`).
 
 **Description**: On both computers: `make pull` (dome_voice must have F14's
 `llm_node`), `make clone` for dome_pad, `rosdep install`, `colcon build`.

@@ -4,13 +4,13 @@
 
 **Date Created:** 2026-11-22
 
-**Done:** no
+**Done:** yes (2026-11-22)
 
 **Tasks File Created:** yes
 
 **Tests Written:** yes
 
-**Test Passing:** no (unit tests pass on the Mac; the ROS run is TF09.6)
+**Test Passing:** yes (unit tests on the Mac; the robot and VM run in TF09.6, confirmed by the user)
 
 **Description**: The Yellow Pad (an ESP32 touchscreen BLE gamepad) becomes
 a DOME package, **`dome_pad`**, in its own repo

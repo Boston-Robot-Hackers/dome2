@@ -4,13 +4,17 @@
 
 ### Pick up here (2026-11-22)
 
-**F09 in progress: the Yellow Pad as `dome_pad`.** New repo
+**F09 is done: the Yellow Pad as `dome_pad`.** New repo
 `Boston-Robot-Hackers/dome_pad` (was `yellow_pad`), registered here; `pad`
 subsystem on both launchers; button A asks dome_voice's LLM for a robot
-joke. Code, unit tests and docs are done (TF09.0-TF09.5). **TF09.6 is
-next: build and run on the Pi and the VM.** dome2's changes aren't
-committed. See TF09.
+joke. The user confirmed driving, the ROS tab and button A on the robot
+and VM. Results are in TF09 (`process/04-tasks/done/`).
 
+- **Run the Pi with `p`**: `bl dome2 robot.launch.py --options "d vo p"`.
+  Without it there's no `joy_node`, so the pad neither drives nor sends
+  button presses.
+- **Left for the user:** archive `Boston-Robot-Hackers/yellow_pad` on
+  GitHub and remove its submodule from `esp32-c6-demo`. Not done; ask first.
 - **The Mac's test run here** has 23 failures that come from stale checkouts
   next to dome2 (dome_control, dome_voice, dome_telemetry behind origin;
   dome_viz not cloned). Identical before and after F09. Run the suite on

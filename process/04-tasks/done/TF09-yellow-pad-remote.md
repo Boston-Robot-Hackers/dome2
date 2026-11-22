@@ -108,15 +108,33 @@ all from stale or missing checkouts of other packages; 7 more tests pass.
 
 ## TF09.6 — Run on the robot and the VM
 
-**Status**: in progress
+**Status**: done (2026-11-22)
 
-**Results so far**:
-- 2026-11-22: firmware flashed (1314224 bytes, hash verified). With rosbridge
-  not yet started, the ROS tab sat at "Connecting to 192.168.4.83..."; the
-  Mac confirmed port 9090 refused. After the VM side was started, **the ROS
-  tab connects** (user), and port 9090 accepts from the Mac.
-- Still to record: driving through `pad` on the Pi, and button A
-  (`/voice/llm_text`, `/voice/llm_reply`, `/announcement`).
+**Results**:
+- Firmware flashed (1314224 bytes, hash verified). With rosbridge not yet
+  started, the ROS tab sat at "Connecting to 192.168.4.83..."; the Mac
+  confirmed port 9090 refused. After the VM side was started, the ROS tab
+  connected.
+- **"Write queue full, dropping outgoing message"** on the VM, about once a
+  second. Two causes, both fixed in dome_pad:
+  - The ROS tab streamed every light topic to count rates. dome_pad F01
+    cut it to `/odom` and `/scan` only.
+  - Still there after F01: rosbridge's `/connected_clients` showed two
+    connections from the pad's address, one stale. rosbridge's
+    `websocket_ping_interval` was 0, so it never dropped a dead client.
+    dome_pad's `remote.launch.py` now sets it to 10 s (read back as 10.0
+    from the running node), and the pad waits 100 ms after closing the
+    socket before turning Wi-Fi off.
+- **Button A first did nothing**: `/rosapi/nodes` showed no `joy_node` or
+  `teleop_twist_joy_node`, so the Pi wasn't running the `pad` subsystem
+  (and showed a `/gendrv` node from an older dome2). After the Pi was
+  updated and started with `--options "d vo p"`, both nodes were up.
+- **User, 2026-11-22: "it all works"**: driving, the ROS tab and button A.
+  Checked from the Mac through rosbridge: every node and topic on the A
+  path present (`joy_node`, `teleop_twist_joy_node`, `pad_buttons`,
+  `llm_node`, `voice_input`, `speech_output`), one rosbridge client.
+- Not recorded: whether the joke was heard (Piper on the Pi was blocked as
+  of `current.md`), and the exact `/cmd_vel` values.
 
 **Description**: On both computers: `make pull` (dome_voice must have F14's
 `llm_node`), `make clone` for dome_pad, `rosdep install`, `colcon build`.

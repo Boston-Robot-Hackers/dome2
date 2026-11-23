@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # subsystem_launcher — include the chosen subsystems' launch files
 # Author: Pito Salas and Claude Code
-# Version: 4
+# Version: 5
 # Created: 2026-11-16
-# Updated: 2026-11-17
+# Updated: 2026-11-23
 # Open Source Under MIT license
 """The better_launch side of dome2's launchers.
 
 `robot.launch.py` and `remote.launch.py` each declare an ordered
-`LAUNCH_FILES` table (subsystem name → package and launch file) and call
-`launch_subsystems`. It resolves the profile or options with
+`LAUNCH_FILES` table (subsystem name → package and launch file, optionally
+with fixed per-entry args) and call `launch_subsystems`. It resolves the profile or options with
 `launch_options`, optionally asks yes/no per subsystem, and includes the
 launch file of each enabled one. With neither `--options` nor the profile's
 env var, it logs the available subsystems and shuts down without launching
@@ -26,6 +26,8 @@ import click
 from better_launch import BetterLaunch
 
 from dome2.launch_options import (
+    LaunchEntry,
+    entry_parts,
     missing_profile_message,
     resolve_tokens,
     token_string,
@@ -36,7 +38,7 @@ def launch_subsystems(
     profile: str,
     options: str,
     is_interactive: bool,
-    launch_files: dict[str, tuple[str, str]],
+    launch_files: dict[str, LaunchEntry],
 ):
     subsystems = list(launch_files)
     if not options and profile not in os.environ:
@@ -55,5 +57,5 @@ def launch_subsystems(
     bl = BetterLaunch()
     for name, is_enabled in cfg.items():
         if is_enabled:
-            pkg, launch_file = launch_files[name]
-            bl.include(pkg, launch_file)
+            pkg, launch_file, entry_args = entry_parts(launch_files[name])
+            bl.include(pkg, launch_file, **entry_args)

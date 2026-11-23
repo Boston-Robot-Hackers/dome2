@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # test_launch_profiles.py — tests for the launchers' profile and token logic
 # Author: Pito Salas and Claude Code
-# Version: 7
+# Version: 8
 # Created: 2026-11-16
-# Updated: 2026-11-20
+# Updated: 2026-11-23
 # Open Source Under MIT license
 
 import ast
@@ -16,6 +16,7 @@ import pytest
 from conftest import install_better_launch_stub
 
 from dome2.launch_options import (
+    entry_parts,
     missing_profile_message,
     resolve_tokens,
     token_string,
@@ -26,6 +27,8 @@ LAUNCH_DIR = Path(__file__).parent.parent / "launch"
 ROBOT_SUBSYSTEMS = [
     "drivers",
     "slam",
+    "nav2",
+    "explorer",
     "control",
     "vision",
     "semantic",
@@ -139,26 +142,108 @@ class TestLaunchSubsystemsWithoutProfile:
         assert "viz" in caplog.text
 
 
+class TestEntryParts:
+    def test_two_element_entry_has_no_args(self):
+        assert entry_parts(("dome_viz", "remote.launch.py")) == (
+            "dome_viz",
+            "remote.launch.py",
+            {},
+        )
+
+    def test_three_element_entry_keeps_its_args(self):
+        entry = ("dome_nav", "robot.launch.py", {"unit": "slam"})
+        assert entry_parts(entry) == ("dome_nav", "robot.launch.py", {"unit": "slam"})
+
+    def test_other_lengths_raise(self):
+        with pytest.raises(ValueError):
+            entry_parts(("dome_nav",))
+
+
+UNIT_LAUNCH_FILES = {
+    "slam": ("dome_nav", "robot.launch.py", {"unit": "slam"}),
+    "nav2": ("dome_nav", "robot.launch.py", {"unit": "nav2"}),
+    "viz": ("dome_viz", "remote.launch.py"),
+}
+
+
+def included_calls(options):
+    """Run launch_subsystems on UNIT_LAUNCH_FILES; return its include calls."""
+    install_better_launch_stub()
+    from dome2 import subsystem_launcher
+
+    bl_class = Mock()
+    original = subsystem_launcher.BetterLaunch
+    subsystem_launcher.BetterLaunch = bl_class
+    try:
+        subsystem_launcher.launch_subsystems("robot", options, False, UNIT_LAUNCH_FILES)
+    finally:
+        subsystem_launcher.BetterLaunch = original
+    return [(c.args, c.kwargs) for c in bl_class.return_value.include.call_args_list]
+
+
+class TestLaunchSubsystemsIncludes:
+    """Selected subsystems are included with their per-entry args, if any."""
+
+    def test_per_entry_args_reach_include(self):
+        assert included_calls("sl") == [
+            (("dome_nav", "robot.launch.py"), {"unit": "slam"})
+        ]
+
+    def test_two_element_entry_includes_without_args(self):
+        assert included_calls("vi") == [(("dome_viz", "remote.launch.py"), {})]
+
+    def test_same_file_serves_two_subsystems(self):
+        assert included_calls("sl n") == [
+            (("dome_nav", "robot.launch.py"), {"unit": "slam"}),
+            (("dome_nav", "robot.launch.py"), {"unit": "nav2"}),
+        ]
+
+    def test_unselected_entries_are_not_included(self):
+        assert [args for args, _ in included_calls("n")] == [
+            ("dome_nav", "robot.launch.py")
+        ]
+
+
 class TestRobotLaunch:
     def test_subsystems_match_launch_table(self, robot_launch):
         assert robot_launch.SUBSYSTEMS == ROBOT_SUBSYSTEMS
 
     def test_every_token_prefix_resolves(self, robot_launch):
-        assert robot_tokens("d sl c vi se vo f b p") == robot_launch.SUBSYSTEMS
+        assert robot_tokens("d sl n e c vi se vo f b p") == robot_launch.SUBSYSTEMS
+
+    def test_dome_nav_units_share_one_file(self, robot_launch):
+        files = {
+            name: robot_launch.LAUNCH_FILES[name]
+            for name in ("slam", "nav2", "explorer")
+        }
+        assert files == {
+            name: ("dome_nav", "robot.launch.py", {"unit": name}) for name in files
+        }
 
     def test_pad_runs_dome_pads_robot_file(self, robot_launch):
         assert robot_launch.LAUNCH_FILES["pad"] == ("dome_pad", "robot.launch.py")
 
 
 class TestRemoteLaunch:
-    def test_remote_subsystems_are_viz_voice_and_pad(self, remote_launch):
-        assert remote_launch.SUBSYSTEMS == ["viz", "voice", "pad"]
+    def test_remote_subsystems(self, remote_launch):
+        assert remote_launch.SUBSYSTEMS == ["viz", "voice", "pad", "slam", "explorer"]
         assert remote_launch.LAUNCH_FILES["viz"] == ("dome_viz", "remote.launch.py")
         assert remote_launch.LAUNCH_FILES["voice"] == (
             "dome_voice",
             "remote.launch.py",
         )
         assert remote_launch.LAUNCH_FILES["pad"] == ("dome_pad", "remote.launch.py")
+
+    def test_dome_nav_units_use_its_remote_file(self, remote_launch):
+        assert remote_launch.LAUNCH_FILES["explorer"] == (
+            "dome_nav",
+            "remote.launch.py",
+            {"unit": "explorer"},
+        )
+
+    def test_nav2_is_robot_only(self, robot_launch, remote_launch):
+        assert "nav2" in robot_launch.SUBSYSTEMS
+        assert "nav2" not in remote_launch.SUBSYSTEMS
 
     def test_vi_vo_and_p_resolve(self, remote_launch):
         assert resolve_tokens("vi vo p", remote_launch.SUBSYSTEMS) == [

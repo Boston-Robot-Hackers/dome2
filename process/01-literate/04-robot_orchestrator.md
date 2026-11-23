@@ -1,6 +1,6 @@
 ---
-version: "1.6"
-generated: "2026-11-19"
+version: "1.7"
+generated: "2026-11-23"
 ---
 
 # The Orchestrators: robot.launch.py and remote.launch.py
@@ -9,8 +9,8 @@ generated: "2026-11-19"
 
 dome2 has **two top-level launchers**, one per computer:
 
-- **`robot.launch.py`** runs on the Pi and brings up drivers, SLAM, control, vision, the semantic map, voice, foxglove, battery telemetry and the Yellow Pad.
-- **`remote.launch.py`** runs on the remote computer (the VM on the Mac mini). It brings up `dome_viz`'s map view, dome_voice's LLM node, and the Yellow Pad's remote side (rosbridge and the button node).
+- **`robot.launch.py`** runs on the Pi and brings up drivers, dome_nav's `slam`, `nav2` and `explorer` units, control, vision, the semantic map, voice, foxglove, battery telemetry and the Yellow Pad.
+- **`remote.launch.py`** runs on the remote computer (the VM on the Mac mini). It brings up `dome_viz`'s map view, dome_voice's LLM node, the Yellow Pad's remote side (rosbridge and the button node), and dome_nav's `slam` and `explorer` units.
 
 Both decide *which* subsystems to start from a **profile** (an environment variable naming a token string), a direct **`--options`** override, or **interactive** yes/no confirmation. They share all of that logic, so each launcher is little more than a table.
 
@@ -20,9 +20,9 @@ The selection policy lives in two small modules in the `dome2` Python package. T
 
 ```mermaid
 flowchart LR
-    R[robot.launch.py<br/>LAUNCH_FILES: 7 subsystems] --> L[subsystem_launcher<br/>launch_subsystems]
-    M[remote.launch.py<br/>LAUNCH_FILES: viz, voice, pad] --> L
-    L --> O[launch_options<br/>token_string, resolve_tokens<br/>pure, no ROS]
+    R[robot.launch.py<br/>LAUNCH_FILES: 11 subsystems] --> L[subsystem_launcher<br/>launch_subsystems]
+    M[remote.launch.py<br/>LAUNCH_FILES: viz, voice, pad, slam, explorer] --> L
+    L --> O[launch_options<br/>token_string, resolve_tokens, entry_parts<br/>pure, no ROS]
     L --> C[click.confirm<br/>interactive only]
     L --> B[BetterLaunch.include]
 ```
@@ -37,14 +37,17 @@ Before this split, `robot.launch.py` held everything. A second launcher would ha
 
 ## The Subsystem Tables
 
-Each launcher declares one **ordered dict** from subsystem name to `(package, launch file)`:
+Each launcher declares one **ordered dict** from subsystem name to `(package, launch file)`, optionally with a third element of **per-entry arguments** (see below):
 
 ```python
 LAUNCH_FILES = {
     "drivers": ("dome2", "drivers.launch.py"),
-    "slam": ("dome_nav", "robot.launch.py"),
+    "slam": ("dome_nav", "robot.launch.py", {"unit": "slam"}),
+    "nav2": ("dome_nav", "robot.launch.py", {"unit": "nav2"}),
+    "explorer": ("dome_nav", "robot.launch.py", {"unit": "explorer"}),
     "control": ("dome_control", "robot.launch.py"),
     "vision": ("dome_vision_ros", "robot.launch.py"),
+    "semantic": ("dome_semantic", "robot.launch.py"),
     "voice": ("dome_voice", "robot.launch.py"),
     "foxglove": ("foxglove_bridge", "foxglove_bridge_launch.xml"),
     "battery": ("dome_telemetry", "robot.launch.py"),
@@ -59,6 +62,8 @@ LAUNCH_FILES = {
     "viz": ("dome_viz", "remote.launch.py"),
     "voice": ("dome_voice", "remote.launch.py"),
     "pad": ("dome_pad", "remote.launch.py"),
+    "slam": ("dome_nav", "remote.launch.py", {"unit": "slam"}),
+    "explorer": ("dome_nav", "remote.launch.py", {"unit": "explorer"}),
 }
 ```
 
@@ -71,7 +76,11 @@ Since 2026-11-19, **every entry but `drivers` points straight at another package
 - **`battery`** and **`yellow`** (now `pad`) on the robot, so each can be toggled on its own. `--options "d b"` gives drivers plus battery telemetry.
 - **`viz`** on the remote, which uses `dome_viz`'s own `remote.launch.py` unchanged.
 
-SLAM mapping is the `slam` subsystem. The Nav2 modes are still launched separately from `dome_nav`, until dome_nav I13.
+### Placement: offer everything that *can* run here
+
+Decided 2026-11-23: each launcher lists **every sub-launch that can run on its computer**. `slam` and `explorer` can run on either, so they are in **both** tables; the operator picks the side with `--options`. `nav2` is only on the robot, because upstream Nav2 also starts the safety stop. Selecting a unit on both sides starts it twice; that is the operator's responsibility, not guarded.
+
+A dome_nav **mode** is just an option set: explore is `d sl n e` on the robot, or `d sl n` on the robot plus `e` on the remote. dome_nav's nav mode (AMCL) returns after dome_nav I13.
 
 ## Token Resolution
 
@@ -182,7 +191,8 @@ if is_interactive:
 bl = BetterLaunch()
 for name, is_enabled in cfg.items():
     if is_enabled:
-        bl.include(*launch_files[name])
+        pkg, launch_file, entry_args = entry_parts(launch_files[name])
+        bl.include(pkg, launch_file, **entry_args)
 ```
 
 - The resolved names go into a **set**, then into a `{name: bool}` dict keyed by the table. A token given twice (`"d drivers"`) therefore launches once, and the **table order, not the token order**, decides the include order.
@@ -217,3 +227,28 @@ Because the matching is by name, **a name must mean the same thing in every pack
 - **Entries depend on other packages' file names.** `remote.launch.py`'s `viz` entry relies on `dome_viz`'s `remote.launch.py` (renamed from `view.launch.py` on 2026-11-19). `test_launch_conventions.py` now checks that every `LAUNCH_FILES` target exists in the source tree, but only for packages checked out next to dome2.
 - **`package.xml` serves both computers.** It exec-depends on a robot-only package (`dome_telemetry`), so `rosdep install` on the remote computer will complain even though nothing there needs them.
 - **`logging` uses the root logger** (ruff's LOG015 is waived in `ruff.toml`) because pytest's `caplog` here didn't reliably capture named loggers. A module logger would be cleaner if that is revisited.
+
+## Per-entry Arguments: One File, Several Subsystems
+
+Forwarding alone can't select *part* of a package file: every include gets the same arguments. dome_nav needs three separately placeable units from one `robot.launch.py`, so an entry may carry **fixed arguments for that subsystem alone** (F10):
+
+```python
+def entry_parts(entry: LaunchEntry) -> tuple[str, str, dict[str, object]]:
+    if len(entry) == 2:
+        package, launch_file = entry
+        return package, launch_file, {}
+    package, launch_file, entry_args = entry
+    return package, launch_file, entry_args
+```
+
+`entry_parts` lives in the pure `launch_options` module, so the launcher and the convention tests read entries the same way. Any other tuple length fails to unpack and raises.
+
+Two better_launch facts make this work, both confirmed by a throwaway spike (TF10.0):
+
+- **The same file can be included twice.** Each include re-`exec`s the file with fresh globals and calls its entry function again.
+- **Per-entry arguments win.** `include` merges the launcher's arguments first and `**kwargs` on top, so `{"unit": "nav2"}` beats any forwarded `unit`.
+
+And two consequences, enforced by `test_per_entry_args_fit_their_target`:
+
+- Include values are passed **as-is, not converted by click**, so a per-entry value's Python type must already match the target's annotation.
+- A per-entry name must **not** also be declared by the launcher (it would silently override the forwarded value for that entry), nor be a selection argument.

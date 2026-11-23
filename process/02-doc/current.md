@@ -2,7 +2,29 @@
 
 ## Open
 
-### Pick up here (2026-11-22, late): the session moves to the Pi
+### Pick up here (2026-11-23)
+
+**F10 per-entry launch args: code, tests and docs done; robot + VM run left.**
+Driven from dome_nav's F36 (launch units) session.
+
+- `LAUNCH_FILES` entries may carry fixed args:
+  `("dome_nav", "robot.launch.py", {"unit": "nav2"})`. Pure
+  `launch_options.entry_parts`; `launch_subsystems` passes them to
+  `bl.include`. A better_launch spike (TF10.0) confirmed double includes and
+  that per-include args beat forwarded ones.
+- **Placement rule** written into `stack/launch_conventions.md`: each
+  launcher offers every sub-launch that *can* run on its side; "either" units
+  are in both; double starts are the operator's call.
+- New subsystems: robot `nav2`, `explorer` (and `slam` now with
+  `unit=slam`); remote `slam`, `explorer`. `remote.launch.py` now forwards
+  `map_name`. Explore = `d sl n e`, or `d sl n` + remote `e`.
+- Tests: 150 passed, 9 skipped (`/usr/bin/python3 -m pytest`; no `uv` on the
+  Pi). Convention test checks per-entry args against their targets.
+- **Do next (TF10.6):** robot `--options "d sl n" --map_name <name>`, VM
+  `remote.launch.py --options "e" --map_name <name>`; check each node runs
+  once, on the intended machine.
+
+### Before that (2026-11-22, late): the session moves to the Pi
 
 Work so far was on the Mac. **Everything is committed and pushed** (dome2,
 dome_pad, dome_voice, esp32-c6-demo). On the Pi:
@@ -55,6 +77,7 @@ and VM. Results are in TF09 (`process/04-tasks/done/`).
 
 ### Next
 
+0. **F10:** TF10.6 robot + VM run (commands above).
 1. **F05:** robot-test TF05.4 (commands in TF05). Then TF05.5 (stack docs) and TF05.7 (verify on robot and VM, including `--is_interactive`).
 2. **dome_vision's shutdown-abort chore**, then re-test a UI stop for the
    abort and I06's flood.

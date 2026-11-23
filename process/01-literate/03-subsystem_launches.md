@@ -1,6 +1,6 @@
 ---
-version: "2.0"
-generated: "2026-11-19"
+version: "2.1"
+generated: "2026-11-23"
 ---
 
 # Subsystems: What Each Entry Starts
@@ -14,7 +14,9 @@ F05 deleted all four. **`robot.launch.py`'s table now names the package files di
 ```python
 LAUNCH_FILES = {
     "drivers": ("dome2", "drivers.launch.py"),
-    "slam": ("dome_nav", "robot.launch.py"),
+    "slam": ("dome_nav", "robot.launch.py", {"unit": "slam"}),
+    "nav2": ("dome_nav", "robot.launch.py", {"unit": "nav2"}),
+    "explorer": ("dome_nav", "robot.launch.py", {"unit": "explorer"}),
     "control": ("dome_control", "robot.launch.py"),
     "vision": ("dome_vision_ros", "robot.launch.py"),
     "semantic": ("dome_semantic", "robot.launch.py"),
@@ -36,7 +38,9 @@ LAUNCH_FILES = {
 | Token | Starts | Config |
 |---|---|---|
 | `drivers` | `linorobot2_bringup`: micro-ROS agent, EKF, `robot_state_publisher` (chapter 2) | `dome3.urdf`, `ekf.yaml` in dome2 |
-| `slam` | `slam_toolbox` plus `slam_manager`, which saves the map; no Nav2 | `mapper_params_online_async.yaml` in dome_nav |
+| `slam` | dome_nav unit: `slam_toolbox` plus `slam_manager`, which saves and resumes the map. Also offered on the remote | `mapper_params_online_async.yaml` in dome_nav |
+| `nav2` | dome_nav unit: upstream Nav2 `navigation_launch.py`, whole. Robot only (it includes the safety stop) | `nav2_params_explore_real.yaml` in dome_nav |
+| `explorer` | dome_nav unit: `explorer_manager_node`, idle until an `ExploreArea` goal. Also offered on the remote | params in `dome_nav/launch_units.py` |
 | `control` | `behavior_manager`, `telemetry`, `spin_survey` | `spin_survey.yaml` in dome_control |
 | `vision` | `dome_vision`, a lifecycle node driven to `active` | `roboflow_oak.yaml` in dome_vision_ros |
 | `semantic` | `semantic_map_node` | `semantic_map.yaml`, `class_profiles.yaml` in dome_semantic |

@@ -54,6 +54,7 @@ Robot modes. dome_nav's own docs list these as the real-robot commands.
 | File | Starts | Args | Last change | Status | Proposed |
 |---|---|---|---|---|---|
 | `robot_map.launch.py` | `slam_toolbox` + Nav2 + `slam_manager_node` (Mode A) | `use_sim_time`, `map_name` | 2026-07-31 | SLAM part **passes** (TF36.7 runs). Its Nav2 half is broken (I13), and it starved the EKF in `mon09`. | **rename** to `robot.launch.py` with `--mode slam` (SLAM + `slam_manager`, no Nav2). E3 passed with this setup. It must make sure `slam_toolbox` reaches `active`. The Nav2 modes come back after I13. |
+| `remote.launch.py` | One remote-capable unit per include: `slam` or `explorer` (dome_nav F36, added 2026-11-23). `robot.launch.py` likewise now takes `--unit slam/nav2/explorer` in place of `--mode`. | `unit`, `map_name`, `sim_time`, `max_explore_radius`, `blacklist_radius` | 2026-11-23 | Not yet run (F36 TF36.5, dome2 TF10.6) | **keep** |
 | `robot_nav.launch.py` | AMCL + Nav2 on a saved map (Mode B) | `use_sim_time` | 2026-07-31 | Can't be shown now | **blocked** on I13. Later: `robot.launch.py --mode nav`. |
 | `robot_explore.launch.py` | SLAM + Nav2 + `slam_manager` + `explorer_manager` (Mode E) | `use_sim_time`, `map_name`, `max_explore_radius`, `blacklist_radius` | 2026-07-30 | Can't be shown now | **blocked** on I13. Later: `robot.launch.py --mode explore`. |
 

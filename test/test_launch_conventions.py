@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # test_launch_conventions — static checks of stack/launch_conventions.md
 # Author: Pito Salas and Claude Code
-# Version: 7
+# Version: 8
 # Created: 2026-11-17
-# Updated: 2026-11-19
+# Updated: 2026-11-23
 # Open Source Under MIT license
 """Check every DOME launch file against stack/launch_conventions.md.
 
@@ -21,8 +21,10 @@ xfails: each F05 step removes the entries it fixes, and an entry that starts
 passing fails until it is removed, so the list can only shrink.
 
 Repo-wide tests check stale launch-file references in launch files, READMEs
-and stack/ docs; that every LAUNCH_FILES target exists; that the subsystems
-named in stack/README.md exist; and that the inventory matches the files.
+and stack/ docs; that every LAUNCH_FILES target exists; that per-entry
+arguments are declared by their target with a fitting type and don't clash
+with the launcher's own arguments; that the subsystems named in
+stack/README.md exist; and that the inventory matches the files.
 """
 
 import ast
@@ -33,6 +35,7 @@ from pathlib import Path
 import pytest
 from conftest import LAUNCH_DIR, load_launch_file
 
+from dome2.launch_options import entry_parts
 from dome2.stack_registry import load_registry
 
 REPO_DIR = Path(__file__).parent.parent
@@ -314,7 +317,8 @@ def test_no_stale_launch_file_references(doc):
 
 @pytest.mark.parametrize("launcher", ["robot.launch.py", "remote.launch.py"])
 def test_launch_files_targets_exist(launcher):
-    for package, file_name in load_launch_file(launcher).LAUNCH_FILES.values():
+    for entry in load_launch_file(launcher).LAUNCH_FILES.values():
+        package, file_name, _ = entry_parts(entry)
         assert package_has_launch_file(package, file_name), f"{package} {file_name}"
 
 
@@ -331,7 +335,8 @@ def entry_annotations(path: Path) -> dict[str, str]:
 def target_annotations(launcher: str) -> list[dict[str, str]]:
     """Entry-function arguments of each LAUNCH_FILES target checked out here."""
     found = []
-    for package, file_name in load_launch_file(launcher).LAUNCH_FILES.values():
+    for entry in load_launch_file(launcher).LAUNCH_FILES.values():
+        package, file_name, _ = entry_parts(entry)
         package_dir = ALL_PACKAGES.get(package)
         if package_dir is not None:
             found += [
@@ -357,6 +362,87 @@ def test_forwarded_args_reach_a_target_with_the_same_type(launcher):
 def test_selection_args_are_not_target_args(launcher):
     for target in target_annotations(launcher):
         assert not SELECTION_ARGS & target.keys()
+
+
+def value_fits(annotation: str, value: object) -> bool:
+    """Whether a per-entry value matches a target annotation's source text.
+
+    better_launch passes include values as-is (no click conversion), so the
+    Python type must already match: exact type for plain types, membership
+    for `Literal[...]`.
+    """
+    if annotation in PLAIN_TYPES:
+        return type(value).__name__ == annotation
+    node = ast.parse(annotation, mode="eval").body
+    if isinstance(node, ast.Subscript) and ast.unparse(node.value) == "Literal":
+        options = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
+        return value in [ast.literal_eval(option) for option in options]
+    return False
+
+
+def entry_arg_violations(
+    launcher_args: set[str], entry_args: dict[str, object], target: dict[str, str]
+) -> list[str]:
+    """Rule violations of one LAUNCH_FILES entry's per-entry arguments.
+
+    `target` is the included file's entry-function annotations. A per-entry
+    name must be declared by the target with a fitting type, and must not be
+    a selection argument or one the launcher itself declares (it would
+    silently override the forwarded value).
+    """
+    violations = []
+    for name, value in entry_args.items():
+        if name in SELECTION_ARGS:
+            violations.append(f"{name}: is a selection argument")
+        elif name in launcher_args:
+            violations.append(f"{name}: also declared by the launcher")
+        elif name not in target:
+            violations.append(f"{name}: not declared by the target")
+        elif not value_fits(target[name], value):
+            violations.append(f"{name}: {value!r} does not fit {target[name]}")
+    return violations
+
+
+def entry_target(package: str, file_name: str) -> dict[str, str] | None:
+    """Annotations of a LAUNCH_FILES target, or None if not checked out here."""
+    package_dir = ALL_PACKAGES.get(package)
+    path = package_dir / "launch" / file_name if package_dir else None
+    return entry_annotations(path) if path and path.is_file() else None
+
+
+@pytest.mark.parametrize("launcher", ["robot.launch.py", "remote.launch.py"])
+def test_per_entry_args_fit_their_target(launcher):
+    launcher_args = set(entry_annotations(LAUNCH_DIR / launcher))
+    for name, entry in load_launch_file(launcher).LAUNCH_FILES.items():
+        package, file_name, entry_args = entry_parts(entry)
+        target = entry_target(package, file_name)
+        if entry_args and target is not None:
+            assert entry_arg_violations(launcher_args, entry_args, target) == [], name
+
+
+SAMPLE_TARGET = {"unit": "str", "map_name": "str", "mode": "Literal['a', 'b']"}
+
+
+def sample_violations(entry_args: dict[str, object]) -> list[str]:
+    return entry_arg_violations({"map_name", "sim_time"}, entry_args, SAMPLE_TARGET)
+
+
+@pytest.mark.parametrize(
+    "entry_args",
+    [
+        {"options": "x"},  # selection argument
+        {"map_name": "m"},  # also declared by the launcher
+        {"speed": 1.0},  # not declared by the target
+        {"unit": True},  # wrong type
+        {"mode": "c"},  # outside the Literal
+    ],
+)
+def test_each_per_entry_rule_flags_its_bad_case(entry_args):
+    assert sample_violations(entry_args)
+
+
+def test_fitting_per_entry_args_pass():
+    assert sample_violations({"unit": "slam", "mode": "a"}) == []
 
 
 @pytest.mark.parametrize(

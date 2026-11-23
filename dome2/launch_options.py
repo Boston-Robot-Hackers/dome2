@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # launch_options — pure token and profile resolution shared by dome2's launchers
 # Author: Pito Salas and Claude Code
-# Version: 3
+# Version: 4
 # Created: 2026-11-16
-# Updated: 2026-11-17
+# Updated: 2026-11-23
 # Open Source Under MIT license
 """Turns a launcher's `--profile` / `--options` into a list of subsystems.
 
@@ -17,6 +17,23 @@ it and it tests without a ROS runtime.
 
 import logging
 from collections.abc import Mapping
+
+# A LAUNCH_FILES entry: (package, launch file), optionally with fixed
+# arguments for that subsystem, e.g. ("dome_nav", "robot.launch.py",
+# {"unit": "slam"}), so one package file can serve several subsystems.
+LaunchEntry = tuple[str, str] | tuple[str, str, dict[str, object]]
+
+
+def entry_parts(entry: LaunchEntry) -> tuple[str, str, dict[str, object]]:
+    """Split a LAUNCH_FILES entry into package, file and per-entry args.
+
+    A two-element entry has no per-entry args. Any other length raises.
+    """
+    if len(entry) == 2:
+        package, launch_file = entry
+        return package, launch_file, {}
+    package, launch_file, entry_args = entry
+    return package, launch_file, entry_args
 
 
 def resolve_tokens(options_str: str, subsystems: list[str]) -> list[str]:

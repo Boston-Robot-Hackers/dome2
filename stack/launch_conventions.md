@@ -24,7 +24,7 @@ its status.
 - **dome2:** `robot.launch.py` and `remote.launch.py` (top level), plus
   `drivers.launch.py`, because dome2 owns the driver bringup.
 - **Variants are arguments, not files.** A mode, config or sim-time choice
-  is a launch argument (e.g. `dome_nav`'s `--mode slam`), never a second
+  is a launch argument (e.g. `dome_nav`'s `--unit slam`), never a second
   file.
 
 ### Known exceptions
@@ -86,6 +86,37 @@ annotation to `click`. So:
     it would receive the launcher's selection arguments.
   - Non-better_launch targets (XML, stock ROS launch) receive the same
     arguments as launch arguments and ignore the ones they don't declare.
+- **Per-entry arguments** (F10). An entry may carry a third element, a dict
+  of fixed arguments for that subsystem alone, so one package file can serve
+  several subsystems:
+
+  ```python
+  "slam": ("dome_nav", "robot.launch.py", {"unit": "slam"}),
+  "nav2": ("dome_nav", "robot.launch.py", {"unit": "nav2"}),
+  ```
+
+  `launch_subsystems` passes them to `bl.include`, where they win over the
+  forwarded arguments. `test_per_entry_args_fit_their_target` checks that
+  each one:
+  - is **declared by its target**, with a **matching Python type** —
+    include values are passed as-is, not converted by click;
+  - is **not a selection argument** (`profile`, `options`, `is_interactive`);
+  - **doesn't share a name with an argument the launcher declares**, which
+    it would silently override for that entry.
+
+## Placement: robot or remote
+
+Decided 2026-11-23. Where a node runs is part of its design: robot only,
+remote only, or either.
+
+- **`robot.launch.py` offers every sub-launch that *can* run on the robot**;
+  **`remote.launch.py` offers every one that *can* run remotely.**
+- A sub-launch that can run on either machine is listed in **both**. The
+  operator picks where it runs by which side's `--options` selects it.
+- A robot-only sub-launch (e.g. a safety stop) is listed only in
+  `robot.launch.py`, so it can't be placed remotely by mistake.
+- **Double starts are the operator's responsibility.** Selecting the same
+  sub-launch on both sides starts it twice; nothing guards against it.
 
 ## Entry function
 

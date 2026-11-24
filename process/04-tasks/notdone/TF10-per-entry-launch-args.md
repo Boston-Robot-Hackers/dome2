@@ -144,7 +144,20 @@ and the full dome2 suite passes with `uv run pytest`.
 
 ## TF10.6 — Verify on the robot and the VM
 
-**Status**: not done
+**Status**: done (2026-11-23)
+
+**Result:** robot `bl dome2 robot.launch.py --options "d sl n" --map_name
+n2301`, VM `bl dome2 remote.launch.py --options "e" --map_name n2301`.
+`ros2 node list --no-daemon --spin-time 10` from the robot showed
+`slam_toolbox`, `slam_manager` and the Nav2 servers (incl. `bt_navigator`)
+on the robot and `explore_manager` from the VM, each once;
+`slam_toolbox` reached `active`. The VM's explorer sent `navigate_to_pose`
+goals and Nav2 answered each. (Exploration itself then failed on a phantom
+start obstacle — dome_nav I14/I17, not a placement problem.)
+
+**Gotcha:** `ros2 node list --no-daemon` uses a short default
+`--spin-time`, too short to discover the other machine over wifi. Use
+`--spin-time 10`, or the daemon.
 
 **Description**: Run the F10 demo by hand: `slam` + `nav2` on the robot,
 `explorer` on the VM, and confirm each node starts once on the intended

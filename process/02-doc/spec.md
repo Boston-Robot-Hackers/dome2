@@ -40,6 +40,7 @@ on both the robot and the remote computer.
 | dome_vision | robot | OAK-D object detection and its ROS bridge |
 | dome_viz | remote | Read-only web view of the map as it is built |
 | dome_voice | both | Wake word, STT, intent mapping, speech output on the robot; the LLM node (Whisper, Claude) on the remote |
+| dome_voice_msgs | both | `Announcement` message (`/announcement`), shared by dome_control, dome_voice and dome_nav |
 
 dome2 also launches non-DOME packages: `linorobot2_bringup` (base driver and
 EKF) and `foxglove_bridge`. They are not in the registry.

@@ -42,6 +42,7 @@ Each package keeps its spec and session handoff in its own repo. Older packages 
 | `dome_vision` | robot | `process/02-doc/` |
 | `dome_viz` | remote | `process/02-doc/` |
 | `dome_voice` | both | `process/02-doc/` |
+| `dome_voice_msgs` | both | none (interfaces only: `Announcement`) |
 
 All of them sit side by side in the workspace `src/` directory (`~/ros2_ws/src/<package>`).
 

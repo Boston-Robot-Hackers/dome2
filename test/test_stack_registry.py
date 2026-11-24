@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # test_stack_registry.py — tests for the stack registry and its doc tables
 # Author: Pito Salas and Claude Code
-# Version: 1
+# Version: 2
 # Created: 2026-11-16
-# Updated: 2026-11-16
+# Updated: 2026-11-24
 # Open Source Under MIT license
 
 from pathlib import Path
@@ -31,7 +31,7 @@ def real_packages():
 
 class TestRealRegistry:
     def test_loads_all_packages(self, real_packages):
-        assert len(real_packages) == 13
+        assert len(real_packages) == 14
         assert real_packages[0].name == "dome2"
 
     def test_runs_on_values(self, real_packages):

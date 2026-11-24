@@ -45,3 +45,6 @@ packages:
   - name: dome_voice
     repo: git@github.com:Boston-Robot-Hackers/dome_voice.git
     runs_on: both
+  - name: dome_voice_msgs
+    repo: git@github.com:Boston-Robot-Hackers/dome_voice_msgs.git
+    runs_on: both
